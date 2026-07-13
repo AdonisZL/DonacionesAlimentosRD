@@ -88,3 +88,11 @@ uvicorn app.main:app --reload
 
 Swagger 自动生成
 http://127.0.0.1:8000/docs
+
+
+PostgreSQL
+User:
+postgres
+
+Password:
+9709
