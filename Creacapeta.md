@@ -75,20 +75,17 @@ pip install sqlalchemy
 pip install psycopg2-binary
 pip install python-dotenv
 
-
-前端：
+Fronend 前端：
 cd C:\Users\Adonl\Desktop\Tesis\DonacionesAlimentosRD\frontend
 npm run dev
 
-
-后端打开网址：
+Backend后端打开网址：
 cd C:\Users\Adonl\Desktop\Tesis\DonacionesAlimentosRD\backend
 venv\Scripts\activate
 uvicorn app.main:app --reload
 
 Swagger 自动生成
 http://127.0.0.1:8000/docs
-
 
 PostgreSQL
 User:
