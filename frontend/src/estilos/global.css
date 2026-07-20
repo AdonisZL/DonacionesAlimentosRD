@@ -2,7 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Fuentes (estilo intex) / 字体 */
+/* ============================================================
+   Fuentes (estilo intex) / 字体
+   ============================================================ */
 body {
   font-family: "Inter", sans-serif;
 }
@@ -16,7 +18,9 @@ h6 {
   font-family: "Hanken Grotesk", sans-serif;
 }
 
-/* Panel de vidrio / 玻璃面板 (estilo intex) */
+/* ============================================================
+   Utilidades glass / 玻璃效果
+   ============================================================ */
 .glass-panel {
   background: rgba(248, 249, 255, 0.85);
   backdrop-filter: blur(12px);
@@ -24,7 +28,6 @@ h6 {
   border: 1px solid rgba(226, 232, 240, 0.5);
 }
 
-/* Tarjeta de vidrio / 玻璃卡片 */
 .glass-card {
   background: rgba(255, 255, 255, 0.7);
   backdrop-filter: blur(12px);
@@ -32,7 +35,9 @@ h6 {
   border: 1px solid rgba(255, 255, 255, 0.4);
 }
 
-/* Texto con degradado / 渐变文字 */
+/* ============================================================
+   Texto con degradado / 渐变文字
+   ============================================================ */
 .text-gradient {
   background: linear-gradient(135deg, #006e2f 0%, #22c55e 100%);
   -webkit-background-clip: text;
@@ -41,7 +46,25 @@ h6 {
   color: transparent;
 }
 
-/* Degradados de fondo reutilizables / 可复用背景渐变 */
+.text-gradient-amber {
+  background: linear-gradient(135deg, #855300 0%, #fea619 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+.text-gradient-blue {
+  background: linear-gradient(135deg, #1e3a8a 0%, #4059aa 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* ============================================================
+   Fondos decorativos / 装饰背景
+   ============================================================ */
 .bg-hero-glow {
   background:
     radial-gradient(60% 60% at 15% 10%, rgba(34, 197, 94, 0.14) 0%, transparent 60%),
@@ -49,7 +72,29 @@ h6 {
     radial-gradient(60% 60% at 80% 100%, rgba(64, 89, 170, 0.12) 0%, transparent 60%);
 }
 
-/* Elevación al pasar el ratón / 悬停抬升 */
+.bg-glow-subtle {
+  background:
+    radial-gradient(40% 40% at 0% 0%, rgba(34, 197, 94, 0.06) 0%, transparent 50%),
+    radial-gradient(40% 40% at 100% 100%, rgba(64, 89, 170, 0.06) 0%, transparent 50%);
+}
+
+/* Borde con degradado sutil / 微渐变边框 */
+.border-gradient-b {
+  position: relative;
+}
+.border-gradient-b::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 5%;
+  width: 90%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(34, 197, 94, 0.3), rgba(254, 166, 25, 0.3), transparent);
+}
+
+/* ============================================================
+   Elevaciones y hover / 抬升与悬停
+   ============================================================ */
 .hover-lift {
   transition:
     transform 0.25s ease,
@@ -60,41 +105,46 @@ h6 {
   box-shadow: 0 18px 40px -20px rgba(11, 28, 48, 0.35);
 }
 
-/* Animaciones / 动画 */
+.hover-lift-sm {
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+.hover-lift-sm:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px -12px rgba(11, 28, 48, 0.25);
+}
+
+/* ============================================================
+   Animaciones / 动画
+   ============================================================ */
 @keyframes flotar {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-10px);
-  }
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
 }
 .animar-flotar {
   animation: flotar 6s ease-in-out infinite;
 }
 
 @keyframes aparecer {
-  from {
-    opacity: 0;
-    transform: translateY(16px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 .animar-aparecer {
   animation: aparecer 0.7s ease-out both;
 }
 
+@keyframes aparecer-arr {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animar-aparecer-arr {
+  animation: aparecer-arr 0.4s ease-out both;
+}
+
 @keyframes brillo {
-  0% {
-    background-position: -150% 0;
-  }
-  100% {
-    background-position: 250% 0;
-  }
+  0% { background-position: -150% 0; }
+  100% { background-position: 250% 0; }
 }
 .animar-brillo {
   background-image: linear-gradient(
@@ -107,125 +157,180 @@ h6 {
   animation: brillo 5s linear infinite;
 }
 
-/* Estilos globales / 全局样式
-   Sistema de Donaciones de Alimentos RD
-   Paleta y guía: docs/es/03-guia-diseno.md */
-
-:root {
-  /* Colores / 配色 */
-  --color-primario: #2e7d32;
-  --color-primario-claro: #43a047;
-  --color-secundario: #f9a825;
-  --color-secundario-alt: #fb8c00;
-  --color-fondo: #ffffff;
-  --color-fondo-gris: #f5f5f5;
-  --color-borde: #e0e0e0;
-  --color-control: #0d47a1;
-  --color-texto: #212121;
-  --color-texto-suave: #616161;
-  --color-exito: #2e7d32;
-  --color-aviso: #f9a825;
-  --color-error: #c62828;
-
-  /* Medidas / 尺寸 */
-  --radio-borde: 8px;
-  --espacio: 8px;
-  --sombra: 0 1px 3px rgba(0, 0, 0, 0.12);
-
-  --fuente: system-ui, "Segoe UI", Roboto, sans-serif;
-
-  font-family: var(--fuente);
-  color: var(--color-texto);
-  background-color: var(--color-fondo-gris);
-  line-height: 1.5;
-  -webkit-font-smoothing: antialiased;
+@keyframes pulso-suave {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+.animar-pulso {
+  animation: pulso-suave 2s ease-in-out infinite;
 }
 
-* {
+@keyframes escala-entrada {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
+}
+.animar-escala {
+  animation: escala-entrada 0.5s ease-out both;
+}
+
+/* Escalonado para listas / 列表逐项出现 */
+.animar-lista > * {
+  opacity: 0;
+  animation: aparecer 0.5s ease-out forwards;
+}
+.animar-lista > *:nth-child(1) { animation-delay: 0.05s; }
+.animar-lista > *:nth-child(2) { animation-delay: 0.1s; }
+.animar-lista > *:nth-child(3) { animation-delay: 0.15s; }
+.animar-lista > *:nth-child(4) { animation-delay: 0.2s; }
+.animar-lista > *:nth-child(5) { animation-delay: 0.25s; }
+.animar-lista > *:nth-child(6) { animation-delay: 0.3s; }
+.animar-lista > *:nth-child(7) { animation-delay: 0.35s; }
+.animar-lista > *:nth-child(8) { animation-delay: 0.4s; }
+
+/* ============================================================
+   Esqueleto de carga / 骨架屏
+   ============================================================ */
+@keyframes esqueleto {
+  0% { background-position: -200px 0; }
+  100% { background-position: calc(200px + 100%) 0; }
+}
+.esqueleto {
+  background: linear-gradient(90deg, #e5eeff 25%, #dce9ff 50%, #e5eeff 75%);
+  background-size: 200px 100%;
+  animation: esqueleto 1.5s ease-in-out infinite;
+  border-radius: 8px;
+}
+
+/* ============================================================
+   Scrollbar personalizada / 自定义滚动条
+   ============================================================ */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #bccbb9;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #6d7b6c;
+}
+
+/* ============================================================
+   Estilo de selección / 选中样式
+   ============================================================ */
+::selection {
+  background: rgba(34, 197, 94, 0.25);
+  color: #0b1c30;
+}
+
+/* ============================================================
+   Mejoras de enfoque / 焦点增强
+   ============================================================ */
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+button:focus-visible {
+  outline: 2px solid #006e2f;
+  outline-offset: 2px;
+}
+
+/* ============================================================
+   Decoración de encabezado de página / 页面标题装饰
+   ============================================================ */
+.page-header {
+  position: relative;
+  padding-bottom: 16px;
+}
+.page-header::after {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 60px;
+  height: 3px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, #22c55e, #4ae176);
+}
+
+/* ============================================================
+   Badges y chips mejorados / 增强标签
+   ============================================================ */
+.badge-estado {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 10px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 20px;
+}
+.badge-estado.activo,
+.badge-estado.disponible,
+.badge-estado.completado,
+.badge-estado.entregado {
+  background: rgba(34, 197, 94, 0.15);
+  color: #005321;
+}
+.badge-estado.pendiente,
+.badge-estado.sugerido,
+.badge-estado.confirmado {
+  background: rgba(254, 166, 25, 0.18);
+  color: #653e00;
+}
+.badge-estado.inactivo,
+.badge-estado.vencido,
+.badge-estado.rechazado,
+.badge-estado.expirado {
+  background: rgba(186, 26, 26, 0.12);
+  color: #93000a;
+}
+.badge-estado.suspendido {
+  background: rgba(109, 123, 108, 0.15);
+  color: #3d4a3d;
+}
+
+/* ============================================================
+   Estilos base (mínimo - Tailwind se encarga del resto)
+   基础样式（最小化 - Tailwind负责其余部分）
+   ============================================================ */
+*, *::before, *::after {
   box-sizing: border-box;
 }
 
 body {
   margin: 0;
   min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-h1,
-h2,
-h3 {
-  color: var(--color-texto);
-  margin: 0 0 var(--espacio);
+/* Transición suave entre páginas / 页面间平滑过渡 */
+#root {
+  animation: aparecer 0.35s ease-out both;
 }
 
-a {
-  color: var(--color-control);
+/* ============================================================
+   Mejoras para tablas / 表格增强
+   ============================================================ */
+table tbody tr {
+  transition: background-color 0.15s ease;
+}
+table tbody tr:hover {
+  background-color: rgba(34, 197, 94, 0.04);
 }
 
-/* Botón / 按钮 */
-.boton {
-  font: inherit;
-  font-weight: 600;
-  color: #fff;
-  background-color: var(--color-primario);
-  border: none;
-  border-radius: var(--radio-borde);
-  padding: 10px 18px;
-  cursor: pointer;
-  transition: background-color 0.2s;
+/* ============================================================
+   Mejoras para inputs / 输入框增强
+   ============================================================ */
+input[type="checkbox"] {
+  accent-color: #006e2f;
 }
-
-.boton:hover {
-  background-color: var(--color-primario-claro);
-}
-
-/* Tarjeta / 卡片 */
-.tarjeta {
-  background-color: var(--color-fondo);
-  border: 1px solid var(--color-borde);
-  border-radius: var(--radio-borde);
-  box-shadow: var(--sombra);
-  padding: 20px;
-}
-
-/* Formularios / 表单 */
-.formulario {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.campo {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.campo label {
-  font-size: 14px;
-  color: var(--color-texto-suave);
-}
-
-.campo input,
-.campo select {
-  font: inherit;
-  padding: 8px 10px;
-  border: 1px solid var(--color-borde);
-  border-radius: var(--radio-borde);
-}
-
-.campo input:focus,
-.campo select:focus {
-  outline: 2px solid var(--color-primario);
-  border-color: var(--color-primario);
-}
-
-.mensaje-error {
-  color: var(--color-error);
-  font-size: 14px;
-  margin: 0;
-}
-
-a.boton {
-  text-decoration: none;
-  display: inline-block;
+input[type="radio"] {
+  accent-color: #006e2f;
 }

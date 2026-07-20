@@ -137,29 +137,40 @@ function Reportes() {
       <EncabezadoApp />
 
       <main className="flex-1 w-full max-w-6xl mx-auto px-margin-mobile md:px-margin-desktop py-2xl flex flex-col gap-xl">
-        <h1 className="font-headline-lg text-headline-lg text-on-surface">Reportería</h1>
+        <div>
+          <div className="flex items-center gap-sm mb-sm">
+            <span className="material-symbols-outlined text-primary">bar_chart</span>
+            <h1 className="font-headline-lg text-headline-lg text-on-surface page-header">Reportería</h1>
+          </div>
+          <p className="font-body-md text-body-md text-on-surface-variant">
+            Visualiza, filtra y exporta los datos de tu operación.
+          </p>
+        </div>
 
-        {error && <p className="font-body-md text-sm text-error">{error}</p>}
+        {error && (
+          <div className="flex items-center gap-sm rounded-lg bg-error/10 border border-error/20 px-sm py-sm text-error">
+            <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>error</span>
+            <span className="font-body-md text-sm">{error}</span>
+          </div>
+        )}
         {mensaje && (
-          <div className="flex items-center gap-sm rounded-lg bg-primary-container/20 px-sm py-sm text-on-primary-container">
-            <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>
-              check_circle
-            </span>
+          <div className="flex items-center gap-sm rounded-lg bg-primary/10 border border-primary/20 px-sm py-sm text-primary">
+            <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>check_circle</span>
             <span className="font-body-md text-sm">{mensaje}</span>
           </div>
         )}
 
         {/* Pestañas */}
-        <div className="flex flex-wrap gap-xs border-b border-outline-variant/40">
+        <div className="flex flex-wrap gap-1 bg-surface-container-low rounded-2xl p-1 border border-outline-variant/20">
           {PESTANAS.map((p) => (
             <button
               key={p.id}
               type="button"
               onClick={() => cambiarPestana(p.id)}
-              className={`flex items-center gap-xs px-md py-sm font-label-md text-label-md border-b-2 -mb-px transition-colors ${
+              className={`flex items-center gap-xs px-md py-sm font-label-md text-label-md rounded-xl transition-all duration-200 ${
                 pestana === p.id
-                  ? "border-primary text-primary"
-                  : "border-transparent text-on-surface-variant hover:text-primary"
+                  ? "bg-primary text-on-primary shadow-md shadow-primary/20 font-semibold"
+                  : "text-on-surface-variant hover:text-primary hover:bg-surface-container-lowest"
               }`}
             >
               <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>

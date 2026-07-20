@@ -22,27 +22,29 @@ function VerificarCorreo() {
   }, [params]);
 
   return (
-    <div className="min-h-screen bg-surface flex items-center justify-center p-margin-mobile">
-      <div className="w-full max-w-md glass-panel rounded-xl p-xl text-center">
+    <div className="min-h-screen bg-hero-glow flex items-center justify-center p-margin-mobile">
+      <div className="w-full max-w-md bg-surface-container-lowest rounded-3xl shadow-[0_18px_50px_-20px_rgba(11,28,48,0.35)] border border-outline-variant/30 p-xl text-center animar-escala">
         <div className="flex justify-center mb-lg">
           <Marca />
         </div>
 
         {estado === "cargando" && (
-          <p className="font-body-md text-body-md text-on-surface-variant">
-            Verificando tu correo…
-          </p>
+          <div className="space-y-md">
+            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
+              <span className="material-symbols-outlined text-primary animar-pulso" style={{ fontSize: "32px" }}>hourglass_top</span>
+            </div>
+            <p className="font-body-md text-body-md text-on-surface-variant">
+              Verificando tu correo…
+            </p>
+          </div>
         )}
 
         {estado === "exito" && (
           <>
-            <span
-              className="material-symbols-outlined text-primary"
-              style={{ fontSize: "48px" }}
-            >
-              check_circle
-            </span>
-            <h1 className="font-headline-md text-headline-md text-on-surface mt-sm mb-xs">
+            <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-md">
+              <span className="material-symbols-outlined text-primary" style={{ fontSize: "48px" }}>check_circle</span>
+            </div>
+            <h1 className="font-headline-md text-headline-md text-on-surface mb-xs">
               ¡Correo verificado!
             </h1>
             <p className="font-body-md text-body-md text-on-surface-variant mb-lg">
@@ -50,8 +52,9 @@ function VerificarCorreo() {
             </p>
             <Link
               to="/login"
-              className="inline-block py-sm px-lg rounded-lg bg-primary-container text-on-primary font-label-md text-label-md hover:bg-primary transition-colors"
+              className="inline-flex items-center gap-xs py-sm px-lg rounded-lg bg-primary text-on-primary font-label-md text-label-md font-semibold hover:shadow-lg hover:shadow-primary/25 transition-all"
             >
+              <span className="material-symbols-outlined text-sm">login</span>
               Iniciar sesión
             </Link>
           </>
@@ -59,13 +62,10 @@ function VerificarCorreo() {
 
         {estado === "error" && (
           <>
-            <span
-              className="material-symbols-outlined text-error"
-              style={{ fontSize: "48px" }}
-            >
-              error
-            </span>
-            <h1 className="font-headline-md text-headline-md text-on-surface mt-sm mb-xs">
+            <div className="w-20 h-20 bg-error/10 rounded-full flex items-center justify-center mx-auto mb-md">
+              <span className="material-symbols-outlined text-error" style={{ fontSize: "48px" }}>error</span>
+            </div>
+            <h1 className="font-headline-md text-headline-md text-on-surface mb-xs">
               Enlace inválido o expirado
             </h1>
             <p className="font-body-md text-body-md text-on-surface-variant mb-lg">
@@ -73,8 +73,9 @@ function VerificarCorreo() {
             </p>
             <Link
               to="/login"
-              className="inline-block py-sm px-lg rounded-lg border border-tertiary text-tertiary font-label-md text-label-md hover:bg-surface-container-low transition-colors"
+              className="inline-flex items-center gap-xs py-sm px-lg rounded-lg border-2 border-tertiary/60 text-tertiary font-label-md text-label-md font-semibold hover:bg-tertiary/5 transition-all"
             >
+              <span className="material-symbols-outlined text-sm">arrow_back</span>
               Volver a iniciar sesión
             </Link>
           </>

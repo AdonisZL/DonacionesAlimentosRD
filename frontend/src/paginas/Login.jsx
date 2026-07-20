@@ -90,7 +90,7 @@ function Login() {
             </div>
           </div>
 
-          <div className="bg-surface-container-lowest p-lg md:p-xl rounded-3xl shadow-[0_18px_40px_-24px_rgba(11,28,48,0.4)] border border-outline-variant/30">
+          <div className="bg-surface-container-lowest p-lg md:p-xl rounded-3xl shadow-[0_18px_50px_-20px_rgba(11,28,48,0.35)] border border-outline-variant/30">
             <div className="mb-xl">
               <h2 className="font-headline-lg text-headline-lg text-on-tertiary-container mb-xs">
                 Bienvenido de nuevo
@@ -101,7 +101,7 @@ function Login() {
             </div>
             <form className="space-y-lg" onSubmit={enviar}>
               {error && (
-                <div className="flex items-center gap-sm rounded-lg bg-error-container px-sm py-sm text-on-error-container">
+                <div className="flex items-center gap-sm rounded-lg bg-error/10 border border-error/20 px-sm py-sm text-error">
                   <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>
                     error
                   </span>
@@ -109,11 +109,11 @@ function Login() {
                 </div>
               )}
               <div className="space-y-xs">
-                <label className="block font-label-md text-label-md text-on-surface" htmlFor="email">
+                <label className="block font-label-md text-label-md text-on-surface font-semibold" htmlFor="email">
                   Correo electrónico
                 </label>
                 <div className="relative">
-                  <span className="material-symbols-outlined absolute inset-y-0 left-0 pl-sm flex items-center text-outline-variant">
+                  <span className="material-symbols-outlined absolute inset-y-0 left-0 pl-sm flex items-center text-outline-variant pointer-events-none">
                     mail
                   </span>
                   <input
@@ -123,24 +123,24 @@ function Login() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="ejemplo@correo.com"
-                    className="block w-full pl-xl pr-sm py-sm font-body-md text-body-md text-on-surface bg-surface-container-lowest border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary focus:outline-none transition-all"
+                    className="block w-full pl-xl pr-sm py-sm font-body-md text-body-md text-on-surface bg-surface-container-lowest border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary focus:outline-none transition-all placeholder:text-outline-variant/60"
                   />
                 </div>
               </div>
               <div className="space-y-xs">
                 <div className="flex justify-between items-center">
-                  <label className="block font-label-md text-label-md text-on-surface" htmlFor="password">
+                  <label className="block font-label-md text-label-md text-on-surface font-semibold" htmlFor="password">
                     Contraseña
                   </label>
                   <Link
                     to="/recuperar-password"
-                    className="font-label-sm text-label-sm text-tertiary hover:text-on-tertiary-container"
+                    className="font-label-sm text-label-sm text-tertiary hover:text-on-tertiary-container transition-colors"
                   >
                     ¿Olvidaste tu contraseña?
                   </Link>
                 </div>
                 <div className="relative">
-                  <span className="material-symbols-outlined absolute inset-y-0 left-0 pl-sm flex items-center text-outline-variant">
+                  <span className="material-symbols-outlined absolute inset-y-0 left-0 pl-sm flex items-center text-outline-variant pointer-events-none">
                     lock
                   </span>
                   <input
@@ -150,12 +150,12 @@ function Login() {
                     value={contrasena}
                     onChange={(e) => setContrasena(e.target.value)}
                     placeholder="••••••••"
-                    className="block w-full pl-xl pr-xl py-sm font-body-md text-body-md text-on-surface bg-surface-container-lowest border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary focus:border-primary focus:outline-none transition-all"
+                    className="block w-full pl-xl pr-xl py-sm font-body-md text-body-md text-on-surface bg-surface-container-lowest border border-outline-variant rounded-lg focus:ring-2 focus:ring-primary/30 focus:border-primary focus:outline-none transition-all placeholder:text-outline-variant/60"
                   />
                   <button
                     type="button"
                     onClick={() => setVerClave((v) => !v)}
-                    className="material-symbols-outlined absolute inset-y-0 right-0 pr-sm flex items-center text-outline-variant hover:text-primary"
+                    className="material-symbols-outlined absolute inset-y-0 right-0 pr-sm flex items-center text-outline-variant hover:text-primary transition-colors"
                     aria-label={verClave ? "Ocultar contraseña" : "Mostrar contraseña"}
                   >
                     {verClave ? "visibility_off" : "visibility"}
@@ -166,13 +166,13 @@ function Login() {
                 <button
                   type="submit"
                   disabled={enviando}
-                  className="w-full flex justify-center py-sm px-md rounded-lg shadow-sm font-label-md text-label-md font-semibold text-on-primary bg-primary hover:shadow-lg hover:scale-[1.01] transition-all disabled:opacity-60"
+                  className="w-full flex justify-center py-sm px-md rounded-lg shadow-sm font-label-md text-label-md font-semibold text-on-primary bg-primary hover:shadow-lg hover:shadow-primary/25 hover:scale-[1.01] transition-all disabled:opacity-60 disabled:hover:scale-100"
                 >
                   {enviando ? "Entrando…" : "Iniciar sesión"}
                 </button>
                 <div className="relative">
                   <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-outline-variant"></div>
+                    <div className="w-full border-t border-outline-variant/50"></div>
                   </div>
                   <div className="relative flex justify-center">
                     <span className="px-sm bg-surface-container-lowest font-body-md text-body-md text-on-surface-variant">
@@ -182,7 +182,7 @@ function Login() {
                 </div>
                 <Link
                   to="/registro"
-                  className="w-full flex justify-center py-sm px-md border border-tertiary rounded-lg font-label-md text-label-md font-semibold text-tertiary hover:bg-surface-container-low transition-colors"
+                  className="w-full flex justify-center py-sm px-md border border-tertiary/60 rounded-lg font-label-md text-label-md font-semibold text-tertiary hover:bg-tertiary/5 hover:border-tertiary transition-all"
                 >
                   Crear cuenta
                 </Link>

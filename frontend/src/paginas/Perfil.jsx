@@ -61,51 +61,73 @@ function Perfil() {
       <EncabezadoApp />
 
       <main className="flex-1 w-full max-w-3xl mx-auto px-margin-mobile md:px-margin-desktop py-2xl">
-        <h1 className="font-headline-lg text-headline-lg text-on-surface mb-lg">
-          Mi perfil
-        </h1>
+        {/* Cabecera con avatar */}
+        <div className="flex items-center gap-lg mb-xl">
+          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-primary to-primary-container text-on-primary flex items-center justify-center font-display-lg shadow-lg shadow-primary/20 ring-4 ring-primary/10">
+            {(usuario.nombre || "?").charAt(0).toUpperCase()}
+          </div>
+          <div>
+            <h1 className="font-headline-lg text-headline-lg text-on-surface page-header">
+              Mi perfil
+            </h1>
+            <p className="font-body-md text-body-md text-on-surface-variant">
+              {usuario.email}
+            </p>
+          </div>
+        </div>
 
-        <section className="bg-surface-container-lowest rounded-xl border border-outline-variant/30 p-xl shadow-sm">
+        {/* Datos editables */}
+        <section className="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 p-xl shadow-sm hover-lift-sm">
+          <div className="flex items-center gap-sm mb-lg">
+            <span className="material-symbols-outlined text-primary">edit</span>
+            <h2 className="font-headline-md text-headline-md text-on-surface">Información personal</h2>
+          </div>
           <form className="flex flex-col gap-md" onSubmit={guardar}>
             {mensaje && (
-              <div className="flex items-center gap-sm rounded-lg bg-primary-container/20 px-sm py-sm text-on-primary-container">
+              <div className="flex items-center gap-sm rounded-lg bg-primary/10 border border-primary/20 px-sm py-sm text-primary">
                 <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>
                   check_circle
                 </span>
                 <span className="font-body-md text-sm">{mensaje}</span>
               </div>
             )}
-            {error && <p className="font-body-md text-sm text-error">{error}</p>}
+            {error && <p className="font-body-md text-sm text-error flex items-center gap-xs"><span className="material-symbols-outlined text-sm">error</span>{error}</p>}
 
-            <CampoPerfil id="nombre" etiqueta="Nombre" valor={form.nombre} onChange={(v) => cambiar("nombre", v)} />
-            <CampoPerfil id="apellido" etiqueta="Apellido" valor={form.apellido} onChange={(v) => cambiar("apellido", v)} />
-            <CampoPerfil id="telefono" etiqueta="Teléfono" valor={form.telefono} onChange={(v) => cambiar("telefono", v)} />
+            <CampoPerfil id="nombre" etiqueta="Nombre" icono="person" valor={form.nombre} onChange={(v) => cambiar("nombre", v)} />
+            <CampoPerfil id="apellido" etiqueta="Apellido" icono="badge" valor={form.apellido} onChange={(v) => cambiar("apellido", v)} />
+            <CampoPerfil id="telefono" etiqueta="Teléfono" icono="call" valor={form.telefono} onChange={(v) => cambiar("telefono", v)} />
 
-            <div className="flex flex-col gap-xs">
-              <span className="font-label-sm text-label-sm text-on-surface-variant">
+            <div className="flex flex-col gap-xs bg-surface-container-low rounded-xl p-md border border-outline-variant/20">
+              <span className="font-label-sm text-label-sm text-on-surface-variant flex items-center gap-xs">
+                <span className="material-symbols-outlined text-sm">mail</span>
                 Correo (no editable)
               </span>
-              <span className="font-body-md text-body-md text-on-surface">
+              <span className="font-body-md text-body-md text-on-surface font-semibold">
                 {usuario.email}
               </span>
             </div>
 
-            <div className="flex justify-end">
+            <div className="flex justify-end pt-sm">
               <button
                 type="submit"
                 disabled={guardando}
-                className="py-sm px-lg rounded-lg bg-primary-container text-on-primary font-label-md text-label-md hover:bg-primary transition-colors disabled:opacity-60"
+                className="py-sm px-lg rounded-lg bg-primary text-on-primary font-label-md text-label-md font-semibold hover:shadow-lg hover:shadow-primary/25 hover:scale-[1.02] transition-all disabled:opacity-60 disabled:hover:scale-100 flex items-center gap-xs"
               >
+                <span className="material-symbols-outlined text-sm">save</span>
                 {guardando ? "Guardando…" : "Guardar cambios"}
               </button>
             </div>
           </form>
         </section>
 
-        <section className="mt-xl bg-surface-container-lowest rounded-xl border border-error/30 p-xl">
-          <h2 className="font-headline-md text-headline-md text-on-surface mb-xs">
-            Desactivar cuenta
-          </h2>
+        {/* Desactivar cuenta */}
+        <section className="mt-xl bg-surface-container-lowest rounded-2xl border border-error/20 p-xl">
+          <div className="flex items-center gap-sm mb-xs">
+            <span className="material-symbols-outlined text-error">warning</span>
+            <h2 className="font-headline-md text-headline-md text-on-surface">
+              Zona de riesgo
+            </h2>
+          </div>
           <p className="font-body-md text-body-md text-on-surface-variant mb-md">
             Tu cuenta quedará inactiva y no podrás iniciar sesión. Tu historial se
             conserva conforme a la ley.
@@ -113,7 +135,7 @@ function Perfil() {
           <button
             type="button"
             onClick={desactivar}
-            className="py-sm px-lg rounded-lg border border-error text-error font-label-md text-label-md hover:bg-error-container/30 transition-colors"
+            className="py-sm px-lg rounded-lg border-2 border-error/40 text-error font-label-md text-label-md font-semibold hover:bg-error/5 hover:border-error transition-all"
           >
             Desactivar mi cuenta
           </button>
@@ -124,17 +146,18 @@ function Perfil() {
   );
 }
 
-function CampoPerfil({ id, etiqueta, valor, onChange }) {
+function CampoPerfil({ id, etiqueta, icono, valor, onChange }) {
   return (
     <div className="flex flex-col gap-xs">
-      <label className="font-label-md text-label-md text-on-surface" htmlFor={id}>
+      <label className="font-label-md text-label-md text-on-surface flex items-center gap-xs" htmlFor={id}>
+        <span className="material-symbols-outlined text-on-surface-variant text-sm">{icono}</span>
         {etiqueta}
       </label>
       <input
         id={id}
         value={valor}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full px-sm py-sm bg-surface border border-outline-variant rounded-lg font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
+        className="w-full px-sm py-sm bg-surface border border-outline-variant rounded-lg font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all placeholder:text-outline-variant/60"
       />
     </div>
   );

@@ -212,19 +212,27 @@ function Registro() {
           {/* Indicador de pasos */}
           <div className="flex items-center justify-between mb-xl w-full max-w-sm mx-auto md:mx-0">
             <div className="flex flex-col items-center gap-xs">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center font-label-md text-label-md ${paso >= 1 ? "bg-primary text-on-primary" : "bg-surface-container-high text-on-surface-variant"}`}>
-                1
+              <div className={`w-9 h-9 rounded-full flex items-center justify-center font-label-md text-label-md font-semibold transition-all duration-300 ${
+                paso >= 1
+                  ? "bg-primary text-on-primary shadow-lg shadow-primary/25"
+                  : "bg-surface-container-high text-on-surface-variant"
+              }`}>
+                {paso > 1 ? <span className="material-symbols-outlined text-sm">check</span> : "1"}
               </div>
-              <span className="font-label-sm text-label-sm text-on-surface">Cuenta</span>
+              <span className={`font-label-sm text-label-sm transition-colors ${paso >= 1 ? "text-primary font-semibold" : "text-on-surface-variant"}`}>Cuenta</span>
             </div>
-            <div className="flex-1 h-px bg-outline-variant mx-sm relative">
-              <div className={`absolute top-0 left-0 h-full bg-primary transition-all duration-500 ${paso >= 2 ? "w-full" : "w-0"}`}></div>
+            <div className="flex-1 h-1 bg-outline-variant/40 mx-sm rounded-full relative overflow-hidden">
+              <div className={`absolute top-0 left-0 h-full bg-primary rounded-full transition-all duration-500 ${paso >= 2 ? "w-full" : "w-0"}`}></div>
             </div>
             <div className="flex flex-col items-center gap-xs">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center font-label-md text-label-md border ${paso >= 2 ? "bg-primary text-on-primary border-primary" : "bg-surface-container-high text-on-surface-variant border-outline-variant"}`}>
+              <div className={`w-9 h-9 rounded-full flex items-center justify-center font-label-md text-label-md font-semibold transition-all duration-300 border-2 ${
+                paso >= 2
+                  ? "bg-primary text-on-primary border-primary shadow-lg shadow-primary/25"
+                  : "bg-surface-container-high text-on-surface-variant border-outline-variant"
+              }`}>
                 2
               </div>
-              <span className="font-label-sm text-label-sm text-on-surface-variant">Perfil</span>
+              <span className={`font-label-sm text-label-sm transition-colors ${paso >= 2 ? "text-primary font-semibold" : "text-on-surface-variant"}`}>Perfil</span>
             </div>
           </div>
 
@@ -281,12 +289,16 @@ function Registro() {
                         key={r.nombre}
                         type="button"
                         onClick={() => elegirRol(r.nombre)}
-                        className={`flex flex-col items-center justify-center p-md border rounded-lg text-center gap-xs transition-colors ${activo ? "border-primary bg-surface-container-low" : "border-outline-variant hover:bg-surface-container-low"}`}
+                        className={`flex flex-col items-center justify-center p-md border-2 rounded-xl text-center gap-xs transition-all duration-200 hover-lift-sm ${
+                          activo
+                            ? "border-primary bg-primary/5 shadow-md shadow-primary/10"
+                            : "border-outline-variant/40 hover:border-outline-variant hover:bg-surface-container-low"
+                        }`}
                       >
-                        <span className={`material-symbols-outlined text-3xl ${activo ? "text-primary" : "text-on-surface-variant"}`}>
+                        <span className={`material-symbols-outlined text-3xl transition-colors ${activo ? "text-primary" : "text-on-surface-variant"}`}>
                           {r.icono}
                         </span>
-                        <span className="font-label-md text-label-md text-on-surface">{r.etiqueta}</span>
+                        <span className={`font-label-md text-label-md transition-colors ${activo ? "text-primary font-semibold" : "text-on-surface"}`}>{r.etiqueta}</span>
                         <span className="font-label-sm text-label-sm text-on-surface-variant">{r.descripcion}</span>
                       </button>
                     );
@@ -299,12 +311,16 @@ function Registro() {
                   <span className="font-label-md text-label-md text-on-surface">Subtipo de donante</span>
                   <div className="flex gap-sm">
                     {[
-                      { v: "formal", t: "Formalizado (con RNC)" },
-                      { v: "informal", t: "Especial / Agrícola" },
+                      { v: "formal", t: "Formalizado (con RNC)", icono: "business" },
+                      { v: "informal", t: "Especial / Agrícola", icono: "agriculture" },
                     ].map((s) => (
                       <label
                         key={s.v}
-                        className={`flex-1 flex items-center gap-sm p-sm border rounded-lg cursor-pointer ${formulario.subtipo_donante === s.v ? "border-primary bg-surface-container-low" : "border-outline-variant hover:bg-surface-container-low"}`}
+                        className={`flex-1 flex items-center gap-sm p-sm border-2 rounded-xl cursor-pointer transition-all duration-200 ${
+                          formulario.subtipo_donante === s.v
+                            ? "border-primary bg-primary/5 shadow-sm"
+                            : "border-outline-variant/40 hover:bg-surface-container-low"
+                        }`}
                       >
                         <input
                           type="radio"
@@ -314,6 +330,7 @@ function Registro() {
                           onChange={() => cambiar("subtipo_donante", s.v)}
                           className="text-primary focus:ring-primary"
                         />
+                        <span className="material-symbols-outlined text-on-surface-variant text-sm">{s.icono}</span>
                         <span className="font-body-md text-body-md text-on-surface">{s.t}</span>
                       </label>
                     ))}

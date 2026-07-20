@@ -207,14 +207,27 @@ function Inventario() {
 
       <main className="flex-1 w-full max-w-6xl mx-auto px-margin-mobile md:px-margin-desktop py-2xl flex flex-col gap-xl">
         <div className="flex items-center justify-between">
-          <h1 className="font-headline-lg text-headline-lg text-on-surface">
-            Inventario de alimentos
-          </h1>
+          <div>
+            <div className="flex items-center gap-sm mb-sm">
+              <span className="material-symbols-outlined text-primary">inventory_2</span>
+              <h1 className="font-headline-lg text-headline-lg text-on-surface page-header">
+                Inventario de alimentos
+              </h1>
+            </div>
+            <p className="font-body-md text-body-md text-on-surface-variant">
+              Gestión FEFO de lotes y trazabilidad.
+            </p>
+          </div>
         </div>
 
-        {error && <p className="font-body-md text-sm text-error">{error}</p>}
+        {error && (
+          <div className="flex items-center gap-sm rounded-lg bg-error/10 border border-error/20 px-sm py-sm text-error">
+            <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>error</span>
+            <span className="font-body-md text-sm">{error}</span>
+          </div>
+        )}
         {mensaje && (
-          <div className="flex items-center gap-sm rounded-lg bg-primary-container/20 px-sm py-sm text-on-primary-container">
+          <div className="flex items-center gap-sm rounded-lg bg-primary/10 border border-primary/20 px-sm py-sm text-primary">
             <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>
               check_circle
             </span>
@@ -224,16 +237,17 @@ function Inventario() {
 
         {/* Alertas de vencimiento (RF-13) */}
         {alertas.length > 0 && (
-          <section className="rounded-xl border border-secondary/40 bg-secondary-container/20 p-lg">
+          <section className="rounded-2xl border-2 border-secondary/30 bg-gradient-to-r from-secondary/5 to-transparent p-lg">
             <h2 className="font-headline-md text-headline-md text-on-surface mb-sm flex items-center gap-xs">
-              <span className="material-symbols-outlined text-secondary">warning</span>
+              <span className="material-symbols-outlined text-secondary animar-pulso">warning</span>
               Próximos a vencer (≤ 3 días)
             </h2>
             <ul className="flex flex-col gap-xs">
               {alertas.map((a) => (
-                <li key={a.id_lote} className="font-body-md text-body-md text-on-surface">
+                <li key={a.id_lote} className="font-body-md text-body-md text-on-surface flex items-center gap-sm py-1">
+                  <span className="w-2 h-2 rounded-full bg-secondary" />
                   {a.nombre_producto} — vence en {a.ventana_dias} día(s) ·{" "}
-                  {a.cantidad_disponible} {a.unidad_medida || ""}
+                  <span className="font-semibold">{a.cantidad_disponible} {a.unidad_medida || ""}</span>
                 </li>
               ))}
             </ul>
@@ -241,10 +255,13 @@ function Inventario() {
         )}
 
         {/* Registrar lote (RF-09) */}
-        <section className="bg-surface-container-lowest rounded-xl border border-outline-variant/30 p-xl shadow-sm">
-          <h2 className="font-headline-md text-headline-md text-on-surface mb-md">
-            Registrar lote
-          </h2>
+        <section className="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 p-xl shadow-sm hover-lift-sm">
+          <div className="flex items-center gap-sm mb-md">
+            <span className="material-symbols-outlined text-primary">add_circle</span>
+            <h2 className="font-headline-md text-headline-md text-on-surface">
+              Registrar lote
+            </h2>
+          </div>
           <form className="grid grid-cols-1 md:grid-cols-2 gap-md" onSubmit={enviarLote}>
             <div className="md:col-span-2 flex items-center gap-sm">
               <input
@@ -334,8 +351,9 @@ function Inventario() {
             <div className="md:col-span-2 flex justify-end">
               <button
                 type="submit"
-                className="py-sm px-lg rounded-lg bg-primary-container text-on-primary font-label-md text-label-md hover:bg-primary transition-colors"
+                className="py-sm px-lg rounded-lg bg-primary text-on-primary font-label-md text-label-md font-semibold hover:shadow-lg hover:shadow-primary/25 hover:scale-[1.02] transition-all flex items-center gap-xs"
               >
+                <span className="material-symbols-outlined text-sm">add</span>
                 Registrar lote
               </button>
             </div>
@@ -343,10 +361,13 @@ function Inventario() {
         </section>
 
         {/* Lista FEFO (RF-12) */}
-        <section className="bg-surface-container-lowest rounded-xl border border-outline-variant/30 p-xl shadow-sm">
-          <h2 className="font-headline-md text-headline-md text-on-surface mb-md">
-            Mis lotes (orden FEFO)
-          </h2>
+        <section className="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 p-xl shadow-sm hover-lift-sm">
+          <div className="flex items-center gap-sm mb-md">
+            <span className="material-symbols-outlined text-primary">format_list_numbered</span>
+            <h2 className="font-headline-md text-headline-md text-on-surface">
+              Mis lotes (orden FEFO)
+            </h2>
+          </div>
           {cargando ? (
             <p className="font-body-md text-on-surface-variant">Cargando…</p>
           ) : lotes.length === 0 ? (
@@ -484,12 +505,13 @@ function Inventario() {
 function BadgeVentana({ lote }) {
   const dias = lote.ventana_dias;
   let clases = "bg-surface-container-low text-on-surface-variant";
-  if (dias <= 0) clases = "bg-error/15 text-error";
-  else if (lote.en_alerta) clases = "bg-secondary-container/40 text-on-surface";
-  else if (lote.bajo_umbral) clases = "bg-secondary-container/20 text-on-surface";
+  if (dias <= 0) clases = "badge-estado vencido";
+  else if (lote.en_alerta) clases = "badge-estado pendiente";
+  else if (lote.bajo_umbral) clases = "bg-secondary/10 text-on-surface";
+  else clases = "bg-primary/10 text-primary";
   return (
-    <span className={`inline-block rounded-full px-sm py-[2px] font-label-sm text-label-sm ${clases}`}>
-      {dias} día(s)
+    <span className={`inline-block rounded-full px-sm py-[2px] font-label-sm text-label-sm font-semibold ${clases}`}>
+      {dias <= 0 ? "⚠ " : ""}{dias} día(s)
     </span>
   );
 }

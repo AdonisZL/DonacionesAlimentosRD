@@ -18,11 +18,11 @@ import EncabezadoApp from "../componentes/EncabezadoApp.jsx";
 import PieDePagina from "../componentes/PieDePagina.jsx";
 
 const COLOR_ESTADO = {
-  sugerido: "bg-secondary-container/30 text-on-surface",
-  confirmado: "bg-primary-container/30 text-on-primary-container",
-  rechazado: "bg-error/15 text-error",
-  expirado: "bg-error/15 text-error",
-  completado: "bg-primary-container/50 text-on-primary-container",
+  sugerido: "badge-estado sugerido",
+  confirmado: "badge-estado confirmado",
+  rechazado: "badge-estado rechazado",
+  expirado: "badge-estado expirado",
+  completado: "badge-estado completado",
 };
 
 function Emparejamientos() {
@@ -132,13 +132,26 @@ function Emparejamientos() {
       <EncabezadoApp />
 
       <main className="flex-1 w-full max-w-6xl mx-auto px-margin-mobile md:px-margin-desktop py-2xl flex flex-col gap-xl">
-        <h1 className="font-headline-lg text-headline-lg text-on-surface">
-          Emparejamiento inteligente
-        </h1>
+        <div>
+          <div className="flex items-center gap-sm mb-sm">
+            <span className="material-symbols-outlined text-primary">hub</span>
+            <h1 className="font-headline-lg text-headline-lg text-on-surface page-header">
+              Emparejamiento inteligente
+            </h1>
+          </div>
+          <p className="font-body-md text-body-md text-on-surface-variant">
+            Conecta tus lotes con los receptores más compatibles.
+          </p>
+        </div>
 
-        {error && <p className="font-body-md text-sm text-error">{error}</p>}
+        {error && (
+          <div className="flex items-center gap-sm rounded-lg bg-error/10 border border-error/20 px-sm py-sm text-error">
+            <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>error</span>
+            <span className="font-body-md text-sm">{error}</span>
+          </div>
+        )}
         {mensaje && (
-          <div className="flex items-center gap-sm rounded-lg bg-primary-container/20 px-sm py-sm text-on-primary-container">
+          <div className="flex items-center gap-sm rounded-lg bg-primary/10 border border-primary/20 px-sm py-sm text-primary">
             <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>
               check_circle
             </span>
@@ -147,10 +160,13 @@ function Emparejamientos() {
         )}
 
         {/* Búsqueda de receptores (RF-17) */}
-        <section className="bg-surface-container-lowest rounded-xl border border-outline-variant/30 p-xl shadow-sm">
-          <h2 className="font-headline-md text-headline-md text-on-surface mb-md">
-            Buscar receptores compatibles
-          </h2>
+        <section className="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 p-xl shadow-sm hover-lift-sm">
+          <div className="flex items-center gap-sm mb-md">
+            <span className="material-symbols-outlined text-primary">search</span>
+            <h2 className="font-headline-md text-headline-md text-on-surface">
+              Buscar receptores compatibles
+            </h2>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-md items-end">
             <div className="flex flex-col gap-xs md:col-span-2">
               <label htmlFor="lote" className="font-label-sm text-label-sm text-on-surface-variant">
@@ -190,23 +206,24 @@ function Emparejamientos() {
               type="button"
               onClick={buscar}
               disabled={buscando}
-              className="py-sm px-lg rounded-lg bg-primary-container text-on-primary font-label-md text-label-md hover:bg-primary transition-colors disabled:opacity-60"
+              className="py-sm px-lg rounded-lg bg-primary text-on-primary font-label-md text-label-md font-semibold hover:shadow-lg hover:shadow-primary/25 hover:scale-[1.02] transition-all disabled:opacity-60 disabled:hover:scale-100 flex items-center gap-xs"
             >
+              <span className="material-symbols-outlined text-sm">search</span>
               {buscando ? "Buscando…" : "Buscar receptores"}
             </button>
           </div>
 
           {/* Candidatos */}
           {candidatos.length > 0 && (
-            <ul className="mt-lg flex flex-col gap-sm">
+            <ul className="mt-lg flex flex-col gap-sm animar-lista">
               {candidatos.map((c) => (
                 <li
                   key={c.id_sede}
-                  className="rounded-lg border border-outline-variant/40 p-md flex flex-col gap-xs"
+                  className="rounded-xl border border-outline-variant/40 p-md flex flex-col gap-xs hover:border-primary/20 hover:bg-primary/[0.02] transition-all"
                 >
                   <div className="flex items-center justify-between gap-md">
                     <div>
-                      <p className="font-label-md text-label-md text-on-surface">
+                      <p className="font-label-md text-label-md text-on-surface font-semibold">
                         {c.nombre_sede || "Sede receptora"} · {c.distancia_km} km
                       </p>
                       <p className="font-body-md text-sm text-on-surface-variant">
@@ -217,16 +234,18 @@ function Emparejamientos() {
                       type="button"
                       disabled={!c.compatible}
                       onClick={() => sugerir(c.id_sede)}
-                      className="py-xs px-md rounded-lg bg-primary-container text-on-primary font-label-md text-label-md hover:bg-primary transition-colors disabled:opacity-50"
+                      className="py-xs px-md rounded-lg bg-primary text-on-primary font-label-md text-label-md font-semibold hover:shadow-md hover:shadow-primary/20 hover:scale-[1.02] transition-all disabled:opacity-40 disabled:hover:scale-100"
                     >
                       Sugerir
                     </button>
                   </div>
-                  <p className="font-body-md text-sm text-on-surface-variant italic">
+                  <p className="font-body-md text-sm text-on-surface-variant italic flex items-start gap-xs">
+                    <span className="material-symbols-outlined text-tertiary text-sm mt-0.5">psychology</span>
                     IA: {c.justificacion_ia}
                   </p>
                   {!c.compatible && (
-                    <p className="font-body-md text-sm text-error">
+                    <p className="font-body-md text-sm text-error flex items-center gap-xs">
+                      <span className="material-symbols-outlined text-sm">block</span>
                       {c.motivo_incompatible}
                     </p>
                   )}
@@ -237,10 +256,13 @@ function Emparejamientos() {
         </section>
 
         {/* Emparejamientos (RF-19/20/21/22) */}
-        <section className="bg-surface-container-lowest rounded-xl border border-outline-variant/30 p-xl shadow-sm">
-          <h2 className="font-headline-md text-headline-md text-on-surface mb-md">
-            Mis emparejamientos
-          </h2>
+        <section className="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 p-xl shadow-sm hover-lift-sm">
+          <div className="flex items-center gap-sm mb-md">
+            <span className="material-symbols-outlined text-primary">link</span>
+            <h2 className="font-headline-md text-headline-md text-on-surface">
+              Mis emparejamientos
+            </h2>
+          </div>
           {matches.length === 0 ? (
             <p className="font-body-md text-on-surface-variant">
               Aún no hay emparejamientos.
@@ -264,14 +286,15 @@ function Emparejamientos() {
                       )}
                     </div>
                     <span
-                      className={`inline-block rounded-full px-sm py-[2px] font-label-sm text-label-sm capitalize ${COLOR_ESTADO[m.estado_tramite] || ""}`}
+                      className={`inline-block rounded-full px-sm py-[2px] font-label-sm text-label-sm capitalize font-semibold ${COLOR_ESTADO[m.estado_tramite] || ""}`}
                     >
                       {m.estado_tramite}
                     </span>
                   </div>
 
                   {m.justificacion_ia && (
-                    <p className="font-body-md text-sm text-on-surface-variant italic">
+                    <p className="font-body-md text-sm text-on-surface-variant italic flex items-start gap-xs">
+                      <span className="material-symbols-outlined text-tertiary text-sm mt-0.5">psychology</span>
                       IA: {m.justificacion_ia}
                     </p>
                   )}
@@ -282,15 +305,17 @@ function Emparejamientos() {
                         <button
                           type="button"
                           onClick={() => accion(confirmarEmparejamiento, m.id_emparejamiento, "Emparejamiento confirmado.")}
-                          className="py-xs px-md rounded-lg bg-primary-container text-on-primary font-label-md text-label-md hover:bg-primary transition-colors"
+                          className="py-xs px-md rounded-lg bg-primary text-on-primary font-label-md text-label-md font-semibold hover:shadow-md hover:shadow-primary/20 transition-all flex items-center gap-xs"
                         >
+                          <span className="material-symbols-outlined text-sm">check</span>
                           Confirmar
                         </button>
                         <button
                           type="button"
                           onClick={() => accion(rechazarEmparejamiento, m.id_emparejamiento, "Emparejamiento rechazado.")}
-                          className="py-xs px-md rounded-lg border border-error text-error font-label-md text-label-md hover:bg-error/10 transition-colors"
+                          className="py-xs px-md rounded-lg border-2 border-error/30 text-error font-label-md text-label-md font-semibold hover:bg-error/5 transition-all flex items-center gap-xs"
                         >
+                          <span className="material-symbols-outlined text-sm">close</span>
                           Rechazar
                         </button>
                       </>
@@ -300,15 +325,17 @@ function Emparejamientos() {
                         <button
                           type="button"
                           onClick={() => accion(completarEmparejamiento, m.id_emparejamiento, "Entrega registrada.")}
-                          className="py-xs px-md rounded-lg bg-primary-container text-on-primary font-label-md text-label-md hover:bg-primary transition-colors"
+                          className="py-xs px-md rounded-lg bg-primary text-on-primary font-label-md text-label-md font-semibold hover:shadow-md hover:shadow-primary/20 transition-all flex items-center gap-xs"
                         >
+                          <span className="material-symbols-outlined text-sm">local_shipping</span>
                           Marcar entregado
                         </button>
                         <button
                           type="button"
                           onClick={() => accion(rechazarEmparejamiento, m.id_emparejamiento, "Emparejamiento rechazado.")}
-                          className="py-xs px-md rounded-lg border border-error text-error font-label-md text-label-md hover:bg-error/10 transition-colors"
+                          className="py-xs px-md rounded-lg border-2 border-error/30 text-error font-label-md text-label-md font-semibold hover:bg-error/5 transition-all flex items-center gap-xs"
                         >
+                          <span className="material-symbols-outlined text-sm">close</span>
                           Rechazar / reasignar
                         </button>
                       </>
@@ -358,8 +385,9 @@ function Emparejamientos() {
                         <button
                           type="button"
                           onClick={() => calificar(m.id_emparejamiento)}
-                          className="py-sm px-md rounded-lg bg-primary-container text-on-primary font-label-md text-label-md hover:bg-primary transition-colors"
+                          className="py-sm px-md rounded-lg bg-primary text-on-primary font-label-md text-label-md font-semibold hover:shadow-md hover:shadow-primary/20 transition-all flex items-center gap-xs"
                         >
+                          <span className="material-symbols-outlined text-sm">star</span>
                           Calificar
                         </button>
                       </div>

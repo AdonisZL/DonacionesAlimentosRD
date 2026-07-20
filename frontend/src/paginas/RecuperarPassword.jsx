@@ -25,21 +25,18 @@ function RecuperarPassword() {
   }
 
   return (
-    <div className="min-h-screen bg-surface flex items-center justify-center p-margin-mobile">
-      <div className="w-full max-w-md glass-panel rounded-xl p-xl">
+    <div className="min-h-screen bg-hero-glow flex items-center justify-center p-margin-mobile">
+      <div className="w-full max-w-md bg-surface-container-lowest rounded-3xl shadow-[0_18px_50px_-20px_rgba(11,28,48,0.35)] border border-outline-variant/30 p-xl animar-escala">
         <div className="flex justify-center mb-lg">
           <Marca />
         </div>
 
         {enviado ? (
           <div className="text-center">
-            <span
-              className="material-symbols-outlined text-primary"
-              style={{ fontSize: "48px" }}
-            >
-              mark_email_read
-            </span>
-            <h1 className="font-headline-md text-headline-md text-on-surface mt-sm mb-xs">
+            <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-md">
+              <span className="material-symbols-outlined text-primary" style={{ fontSize: "48px" }}>mark_email_read</span>
+            </div>
+            <h1 className="font-headline-md text-headline-md text-on-surface mb-xs">
               Revisa tu correo
             </h1>
             <p className="font-body-md text-body-md text-on-surface-variant mb-lg">
@@ -48,40 +45,51 @@ function RecuperarPassword() {
             </p>
             <Link
               to="/login"
-              className="text-primary hover:underline font-label-md text-label-md"
+              className="inline-flex items-center gap-xs text-primary hover:underline font-label-md text-label-md font-semibold"
             >
+              <span className="material-symbols-outlined text-sm">arrow_back</span>
               Volver a iniciar sesión
             </Link>
           </div>
         ) : (
           <form className="flex flex-col gap-md" onSubmit={enviar}>
-            <h1 className="font-headline-md text-headline-md text-on-surface">
-              Recuperar contraseña
-            </h1>
-            <p className="font-body-md text-body-md text-on-surface-variant">
-              Ingresa tu correo y te enviaremos un enlace.
-            </p>
+            <div className="text-center mb-sm">
+              <div className="w-16 h-16 bg-tertiary/10 rounded-full flex items-center justify-center mx-auto mb-md">
+                <span className="material-symbols-outlined text-tertiary" style={{ fontSize: "32px" }}>lock_reset</span>
+              </div>
+              <h1 className="font-headline-md text-headline-md text-on-surface">
+                Recuperar contraseña
+              </h1>
+              <p className="font-body-md text-body-md text-on-surface-variant">
+                Ingresa tu correo y te enviaremos un enlace.
+              </p>
+            </div>
             <div className="flex flex-col gap-xs">
               <label
-                className="font-label-md text-label-md text-on-surface"
+                className="font-label-md text-label-md text-on-surface font-semibold"
                 htmlFor="email"
               >
                 Correo electrónico
               </label>
-              <input
-                id="email"
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-sm py-sm bg-surface-container-lowest border border-outline-variant rounded-lg font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary focus:border-primary"
-              />
+              <div className="relative">
+                <span className="material-symbols-outlined absolute inset-y-0 left-0 pl-sm flex items-center text-outline-variant pointer-events-none">mail</span>
+                <input
+                  id="email"
+                  type="email"
+                  required
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="ejemplo@correo.com"
+                  className="w-full pl-xl pr-sm py-sm bg-surface-container-lowest border border-outline-variant rounded-lg font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all placeholder:text-outline-variant/60"
+                />
+              </div>
             </div>
             <button
               type="submit"
               disabled={enviando}
-              className="w-full py-sm rounded-lg bg-primary-container text-on-primary font-label-md text-label-md hover:bg-primary transition-colors disabled:opacity-60"
+              className="w-full py-sm rounded-lg bg-primary text-on-primary font-label-md text-label-md font-semibold hover:shadow-lg hover:shadow-primary/25 hover:scale-[1.01] transition-all disabled:opacity-60 disabled:hover:scale-100 flex items-center justify-center gap-xs"
             >
+              <span className="material-symbols-outlined text-sm">send</span>
               {enviando ? "Enviando…" : "Enviar enlace"}
             </button>
             <Link

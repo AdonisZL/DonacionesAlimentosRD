@@ -73,16 +73,18 @@ function Admin() {
     return (
       <div className="min-h-screen bg-background flex flex-col">
         <EncabezadoApp />
-        <main className="flex-1 max-w-3xl w-full mx-auto px-margin-mobile md:px-margin-desktop py-2xl">
-          <div className="bg-surface-container-lowest rounded-2xl border border-error/30 p-xl text-center">
-            <span className="material-symbols-outlined text-error" style={{ fontSize: "40px" }}>
-              lock
-            </span>
-            <h1 className="font-headline-md text-headline-md text-on-surface mt-sm">
+        <main className="flex-1 max-w-3xl w-full mx-auto px-margin-mobile md:px-margin-desktop py-2xl flex items-center justify-center">
+          <div className="bg-surface-container-lowest rounded-3xl border border-error/20 p-2xl text-center max-w-md shadow-xl">
+            <div className="w-20 h-20 bg-error/10 rounded-full flex items-center justify-center mx-auto mb-lg">
+              <span className="material-symbols-outlined text-error" style={{ fontSize: "40px" }}>
+                lock
+              </span>
+            </div>
+            <h1 className="font-headline-lg text-headline-lg text-on-surface mb-sm">
               Acceso restringido
             </h1>
             <p className="font-body-md text-body-md text-on-surface-variant">
-              Esta sección es solo para administradores.
+              Esta sección es solo para administradores del sistema.
             </p>
           </div>
         </main>
@@ -96,13 +98,26 @@ function Admin() {
       <EncabezadoApp />
 
       <main className="flex-1 w-full max-w-6xl mx-auto px-margin-mobile md:px-margin-desktop py-2xl flex flex-col gap-xl">
-        <h1 className="font-headline-lg text-headline-lg text-on-surface">
-          Panel de administración
-        </h1>
+        <div>
+          <div className="flex items-center gap-sm mb-sm">
+            <span className="material-symbols-outlined text-primary">admin_panel_settings</span>
+            <h1 className="font-headline-lg text-headline-lg text-on-surface page-header">
+              Panel de administración
+            </h1>
+          </div>
+          <p className="font-body-md text-body-md text-on-surface-variant">
+            Gestión global del sistema, usuarios y auditoría.
+          </p>
+        </div>
 
-        {error && <p className="font-body-md text-sm text-error">{error}</p>}
+        {error && (
+          <div className="flex items-center gap-sm rounded-lg bg-error/10 border border-error/20 px-sm py-sm text-error">
+            <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>error</span>
+            <span className="font-body-md text-sm">{error}</span>
+          </div>
+        )}
         {mensaje && (
-          <div className="flex items-center gap-sm rounded-lg bg-primary-container/20 px-sm py-sm text-on-primary-container">
+          <div className="flex items-center gap-sm rounded-lg bg-primary/10 border border-primary/20 px-sm py-sm text-primary">
             <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>check_circle</span>
             <span className="font-body-md text-sm">{mensaje}</span>
           </div>
@@ -207,8 +222,8 @@ function Admin() {
 
 function Metrica({ icono, valor, etiqueta, color }) {
   return (
-    <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 p-lg flex items-center gap-md">
-      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${color}`}>
+    <div className="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 p-lg flex items-center gap-md hover-lift-sm group">
+      <div className={`w-12 h-12 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform ${color}`}>
         <span className="material-symbols-outlined">{icono}</span>
       </div>
       <div>
