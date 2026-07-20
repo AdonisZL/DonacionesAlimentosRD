@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+
+<html lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Únete a la Red de Impacto - ImpactDR</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary-fixed-dim": "#4ae176",
+                        "tertiary": "#4059aa",
+                        "on-tertiary-container": "#1e3a8a",
+                        "secondary-container": "#fea619",
+                        "secondary-fixed-dim": "#ffb95f",
+                        "inverse-primary": "#4ae176",
+                        "on-surface": "#0b1c30",
+                        "primary": "#006e2f",
+                        "on-tertiary-fixed-variant": "#264191",
+                        "on-tertiary": "#ffffff",
+                        "surface-bright": "#f8f9ff",
+                        "on-primary-container": "#004b1e",
+                        "on-secondary-fixed": "#2a1700",
+                        "surface-tint": "#006e2f",
+                        "on-background": "#0b1c30",
+                        "tertiary-container": "#90a8ff",
+                        "surface-container-highest": "#d3e4fe",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary-fixed": "#dce1ff",
+                        "error": "#ba1a1a",
+                        "outline": "#6d7b6c",
+                        "secondary": "#855300",
+                        "secondary-fixed": "#ffddb8",
+                        "primary-container": "#22c55e",
+                        "on-tertiary-fixed": "#00164e",
+                        "inverse-on-surface": "#eaf1ff",
+                        "error-container": "#ffdad6",
+                        "on-primary-fixed": "#002109",
+                        "on-error-container": "#93000a",
+                        "on-secondary": "#ffffff",
+                        "surface-container": "#e5eeff",
+                        "primary-fixed": "#6bff8f",
+                        "surface-variant": "#d3e4fe",
+                        "background": "#f8f9ff",
+                        "on-surface-variant": "#3d4a3d",
+                        "surface-container-high": "#dce9ff",
+                        "surface": "#f8f9ff",
+                        "inverse-surface": "#213145",
+                        "on-secondary-container": "#684000",
+                        "on-primary": "#ffffff",
+                        "surface-container-low": "#eff4ff",
+                        "surface-dim": "#cbdbf5",
+                        "outline-variant": "#bccbb9",
+                        "on-error": "#ffffff",
+                        "on-primary-fixed-variant": "#005321",
+                        "on-secondary-fixed-variant": "#653e00",
+                        "tertiary-fixed-dim": "#b6c4ff"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    spacing: {
+                        "xl": "40px",
+                        "margin-desktop": "32px",
+                        "margin-mobile": "16px",
+                        "lg": "24px",
+                        "sm": "8px",
+                        "md": "16px",
+                        "xs": "4px",
+                        "base": "4px",
+                        "2xl": "64px",
+                        "gutter": "24px"
+                    },
+                    fontFamily: {
+                        "headline-lg": ["Hanken Grotesk"],
+                        "body-md": ["Inter"],
+                        "label-md": ["Inter"],
+                        "body-lg": ["Inter"],
+                        "headline-lg-mobile": ["Hanken Grotesk"],
+                        "headline-md": ["Hanken Grotesk"],
+                        "display-lg": ["Hanken Grotesk"],
+                        "label-sm": ["Inter"]
+                    },
+                    fontSize: {
+                        "headline-lg": ["32px", { lineHeight: "40px", letterSpacing: "-0.01em", fontWeight: "600" }],
+                        "body-md": ["16px", { lineHeight: "24px", fontWeight: "400" }],
+                        "label-md": ["14px", { lineHeight: "20px", letterSpacing: "0.01em", fontWeight: "500" }],
+                        "body-lg": ["18px", { lineHeight: "28px", fontWeight: "400" }],
+                        "headline-lg-mobile": ["28px", { lineHeight: "36px", fontWeight: "600" }],
+                        "headline-md": ["24px", { lineHeight: "32px", fontWeight: "600" }],
+                        "display-lg": ["48px", { lineHeight: "56px", letterSpacing: "-0.02em", fontWeight: "700" }],
+                        "label-sm": ["12px", { lineHeight: "16px", letterSpacing: "0.03em", fontWeight: "600" }]
+                    }
+                }
+            }
+        };
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3, h4, h5, h6, .font-headline-lg, .font-headline-md, .font-display-lg { font-family: 'Hanken Grotesk', sans-serif; }
+        
+        .step-transition {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .form-input:focus {
+            box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.2);
+            border-color: #006e2f;
+        }
+
+        .type-card-active {
+            border-color: #006e2f;
+            background-color: #eff4ff;
+        }
+        
+        .type-card-active .material-symbols-outlined {
+            color: #006e2f;
+        }
+    </style>
+</head>
+<body class="bg-surface min-h-screen flex items-center justify-center p-margin-mobile md:p-margin-desktop text-on-surface">
+<div class="w-full max-w-[1024px] bg-surface-container-lowest rounded-xl shadow-[0_4px_16px_rgba(30,58,138,0.05)] overflow-hidden flex flex-col md:flex-row border border-outline-variant/30">
+<!-- Left Side: Visual / Branding -->
+<div class="hidden md:block md:w-5/12 bg-surface-container-low p-xl relative overflow-hidden flex flex-col justify-between border-r border-outline-variant/30">
+<div class="relative z-10">
+<div class="font-headline-lg text-headline-lg text-primary font-bold mb-lg tracking-tight">ImpactDR</div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface mb-md">Únete a la Red de Impacto</h2>
+<p class="font-body-md text-body-md text-on-surface-variant">Conectando estrategias filantrópicas con acción comunitaria en la República Dominicana.</p>
+</div>
+<div class="relative z-10 mt-2xl">
+<div class="bg-surface-container-lowest/80 backdrop-blur-sm p-lg rounded-lg border border-outline-variant/50">
+<div class="flex items-center gap-sm mb-sm">
+<span class="material-symbols-outlined text-primary" style="font-variation-settings: 'FILL' 1;">security</span>
+<span class="font-label-md text-label-md text-on-surface">Gestión Transparente</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm">Tus datos están seguros y se utilizan exclusivamente para maximizar el impacto social.</p>
+</div>
+</div>
+<!-- Background decorative element -->
+<div class="absolute -bottom-24 -left-24 w-96 h-96 bg-primary-container/20 rounded-full blur-3xl"></div>
+<div class="absolute -top-12 -right-12 w-64 h-64 bg-tertiary-container/20 rounded-full blur-3xl"></div>
+</div>
+<!-- Right Side: Form Content -->
+<div class="w-full md:w-7/12 p-lg md:p-xl flex flex-col">
+<!-- Mobile Header -->
+<div class="md:hidden mb-lg">
+<div class="font-headline-lg-mobile text-headline-lg-mobile text-primary font-bold tracking-tight mb-xs">ImpactDR</div>
+<h2 class="font-headline-md text-headline-md text-on-surface">Únete a la Red</h2>
+</div>
+<!-- Progress Indicators -->
+<div class="flex items-center justify-between mb-xl w-full max-w-sm mx-auto md:mx-0">
+<div class="flex flex-col items-center gap-xs">
+<div class="w-8 h-8 rounded-full bg-primary text-on-primary flex items-center justify-center font-label-md text-label-md transition-colors duration-300" id="step1-indicator">1</div>
+<span class="font-label-sm text-label-sm text-on-surface">Cuenta</span>
+</div>
+<div class="flex-1 h-px bg-outline-variant mx-sm relative">
+<div class="absolute top-0 left-0 h-full bg-primary transition-all duration-500 w-0" id="progress-line"></div>
+</div>
+<div class="flex flex-col items-center gap-xs">
+<div class="w-8 h-8 rounded-full bg-surface-container-high text-on-surface-variant flex items-center justify-center font-label-md text-label-md border border-outline-variant transition-colors duration-300" id="step2-indicator">2</div>
+<span class="font-label-sm text-label-sm text-on-surface-variant">Perfil</span>
+</div>
+</div>
+<form class="flex-1 flex flex-col relative overflow-hidden" id="registration-form" onsubmit="event.preventDefault();">
+<!-- Step 1: Account Details -->
+<div class="step-transition w-full opacity-100 translate-x-0 absolute inset-0 flex flex-col h-full bg-surface-container-lowest z-10" id="step-1">
+<h3 class="font-headline-md text-headline-md text-on-surface mb-lg">Detalles de la Cuenta</h3>
+<div class="space-y-md flex-1">
+<div class="flex flex-col gap-xs">
+<label class="font-label-md text-label-md text-on-surface" for="email">Correo Electrónico</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">mail</span>
+<input class="form-input w-full pl-10 pr-3 py-2 bg-surface border border-outline-variant rounded-lg font-body-md text-body-md text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none transition-shadow" id="email" placeholder="ejemplo@correo.com" required="" type="email"/>
+</div>
+</div>
+<div class="flex flex-col gap-xs">
+<label class="font-label-md text-label-md text-on-surface" for="password">Contraseña</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">lock</span>
+<input class="form-input w-full pl-10 pr-3 py-2 bg-surface border border-outline-variant rounded-lg font-body-md text-body-md text-on-surface focus:outline-none transition-shadow" id="password" placeholder="••••••••" required="" type="password"/>
+</div>
+</div>
+<div class="flex flex-col gap-xs">
+<label class="font-label-md text-label-md text-on-surface" for="confirm-password">Confirmar Contraseña</label>
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">lock</span>
+<input class="form-input w-full pl-10 pr-3 py-2 bg-surface border border-outline-variant rounded-lg font-body-md text-body-md text-on-surface focus:outline-none transition-shadow" id="confirm-password" placeholder="••••••••" required="" type="password"/>
+</div>
+</div>
+</div>
+<div class="mt-xl flex justify-end">
+<button class="bg-primary hover:bg-primary-fixed-dim text-on-primary font-label-md text-label-md py-2 px-lg rounded-lg shadow-sm hover:shadow-md transition-all flex items-center gap-xs" onclick="nextStep()" type="button">
+                            Continuar
+                            <span class="material-symbols-outlined" style="font-size: 18px;">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Step 2: Profile Type -->
+<div class="step-transition w-full opacity-0 translate-x-full absolute inset-0 flex flex-col h-full bg-surface-container-lowest pointer-events-none" id="step-2">
+<h3 class="font-headline-md text-headline-md text-on-surface mb-lg">Tipo de Perfil</h3>
+<div class="flex-1 flex flex-col gap-lg overflow-y-auto pr-2 pb-lg">
+<div class="flex flex-col gap-sm">
+<label class="font-label-md text-label-md text-on-surface">Selecciona tu rol principal</label>
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-sm">
+<button class="user-type-btn flex flex-col items-center justify-center p-md border border-outline-variant rounded-lg hover:bg-surface-container-low transition-colors text-center gap-xs" onclick="selectUserType('donor', this)" type="button">
+<span class="material-symbols-outlined text-on-surface-variant text-3xl">volunteer_activism</span>
+<span class="font-label-md text-label-md text-on-surface">Donante</span>
+</button>
+<button class="user-type-btn flex flex-col items-center justify-center p-md border border-outline-variant rounded-lg hover:bg-surface-container-low transition-colors text-center gap-xs" onclick="selectUserType('ngo', this)" type="button">
+<span class="material-symbols-outlined text-on-surface-variant text-3xl">diversity_1</span>
+<span class="font-label-md text-label-md text-on-surface">ONG</span>
+</button>
+<button class="user-type-btn flex flex-col items-center justify-center p-md border border-outline-variant rounded-lg hover:bg-surface-container-low transition-colors text-center gap-xs" onclick="selectUserType('company', this)" type="button">
+<span class="material-symbols-outlined text-on-surface-variant text-3xl">domain</span>
+<span class="font-label-md text-label-md text-on-surface">Empresa</span>
+</button>
+</div>
+</div>
+<!-- Dynamic Field for Donor -->
+<div class="hidden flex-col gap-sm animate-[fadeIn_0.3s_ease-out]" id="donor-subtypes">
+<label class="font-label-md text-label-md text-on-surface">Subtipo de Donante</label>
+<div class="flex gap-sm">
+<label class="flex-1 flex items-center gap-sm p-sm border border-outline-variant rounded-lg cursor-pointer hover:bg-surface-container-low">
+<input class="text-primary focus:ring-primary h-4 w-4 border-outline-variant" name="donor_subtype" type="radio" value="individual"/>
+<span class="font-body-md text-body-md text-on-surface">Individual</span>
+</label>
+<label class="flex-1 flex items-center gap-sm p-sm border border-outline-variant rounded-lg cursor-pointer hover:bg-surface-container-low">
+<input class="text-primary focus:ring-primary h-4 w-4 border-outline-variant" name="donor_subtype" type="radio" value="corporate"/>
+<span class="font-body-md text-body-md text-on-surface">Corporativo</span>
+</label>
+</div>
+</div>
+</div>
+<div class="mt-auto pt-md flex justify-between bg-surface-container-lowest border-t border-outline-variant/30">
+<button class="text-on-surface-variant hover:text-on-surface font-label-md text-label-md py-2 px-md rounded-lg transition-colors flex items-center gap-xs" onclick="prevStep()" type="button">
+<span class="material-symbols-outlined" style="font-size: 18px;">arrow_back</span>
+                            Atrás
+                        </button>
+<button class="bg-primary hover:bg-primary-fixed-dim text-on-primary font-label-md text-label-md py-2 px-lg rounded-lg shadow-sm hover:shadow-md transition-all flex items-center gap-xs" type="submit">
+                            Completar Registro
+                            <span class="material-symbols-outlined" style="font-size: 18px;">check</span>
+</button>
+</div>
+</div>
+</form>
+<div class="mt-md text-center">
+<p class="font-body-md text-body-md text-on-surface-variant text-sm">¿Ya tienes cuenta? <a class="text-primary hover:underline font-label-md text-label-md" href="#">Inicia Sesión</a></p>
+</div>
+</div>
+</div>
+<style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-5px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+<script>
+        function nextStep() {
+            // Basic validation check for step 1 (simplified for UI demo)
+            const email = document.getElementById('email').value;
+            if(!email) return;
+
+            document.getElementById('step-1').classList.add('-translate-x-full', 'opacity-0', 'pointer-events-none');
+            document.getElementById('step-1').classList.remove('translate-x-0', 'opacity-100', 'z-10');
+            
+            document.getElementById('step-2').classList.remove('translate-x-full', 'opacity-0', 'pointer-events-none');
+            document.getElementById('step-2').classList.add('translate-x-0', 'opacity-100', 'z-10');
+
+            // Update progress
+            document.getElementById('progress-line').style.width = '100%';
+            const step2Ind = document.getElementById('step2-indicator');
+            step2Ind.classList.remove('bg-surface-container-high', 'text-on-surface-variant', 'border-outline-variant');
+            step2Ind.classList.add('bg-primary', 'text-on-primary', 'border-primary');
+        }
+
+        function prevStep() {
+            document.getElementById('step-2').classList.add('translate-x-full', 'opacity-0', 'pointer-events-none');
+            document.getElementById('step-2').classList.remove('translate-x-0', 'opacity-100', 'z-10');
+            
+            document.getElementById('step-1').classList.remove('-translate-x-full', 'opacity-0', 'pointer-events-none');
+            document.getElementById('step-1').classList.add('translate-x-0', 'opacity-100', 'z-10');
+
+            // Update progress
+            document.getElementById('progress-line').style.width = '0%';
+            const step2Ind = document.getElementById('step2-indicator');
+            step2Ind.classList.add('bg-surface-container-high', 'text-on-surface-variant', 'border-outline-variant');
+            step2Ind.classList.remove('bg-primary', 'text-on-primary', 'border-primary');
+        }
+
+        function selectUserType(type, element) {
+            // Reset all buttons
+            document.querySelectorAll('.user-type-btn').forEach(btn => {
+                btn.classList.remove('type-card-active');
+                btn.querySelector('.material-symbols-outlined').classList.remove('text-primary');
+                btn.querySelector('.material-symbols-outlined').classList.add('text-on-surface-variant');
+            });
+
+            // Activate selected
+            element.classList.add('type-card-active');
+            element.querySelector('.material-symbols-outlined').classList.add('text-primary');
+            element.querySelector('.material-symbols-outlined').classList.remove('text-on-surface-variant');
+
+            // Show/hide dynamic field
+            const donorSubtypes = document.getElementById('donor-subtypes');
+            if (type === 'donor') {
+                donorSubtypes.classList.remove('hidden');
+                donorSubtypes.classList.add('flex');
+            } else {
+                donorSubtypes.classList.add('hidden');
+                donorSubtypes.classList.remove('flex');
+                // clear radio selection
+                document.querySelectorAll('input[name="donor_subtype"]').forEach(radio => radio.checked = false);
+            }
+        }
+    </script>
+</body></html>

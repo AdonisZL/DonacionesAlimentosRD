@@ -1,0 +1,231 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Fuentes (estilo intex) / 字体 */
+body {
+  font-family: "Inter", sans-serif;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: "Hanken Grotesk", sans-serif;
+}
+
+/* Panel de vidrio / 玻璃面板 (estilo intex) */
+.glass-panel {
+  background: rgba(248, 249, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(226, 232, 240, 0.5);
+}
+
+/* Tarjeta de vidrio / 玻璃卡片 */
+.glass-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+/* Texto con degradado / 渐变文字 */
+.text-gradient {
+  background: linear-gradient(135deg, #006e2f 0%, #22c55e 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+}
+
+/* Degradados de fondo reutilizables / 可复用背景渐变 */
+.bg-hero-glow {
+  background:
+    radial-gradient(60% 60% at 15% 10%, rgba(34, 197, 94, 0.14) 0%, transparent 60%),
+    radial-gradient(50% 50% at 90% 20%, rgba(254, 166, 25, 0.12) 0%, transparent 60%),
+    radial-gradient(60% 60% at 80% 100%, rgba(64, 89, 170, 0.12) 0%, transparent 60%);
+}
+
+/* Elevación al pasar el ratón / 悬停抬升 */
+.hover-lift {
+  transition:
+    transform 0.25s ease,
+    box-shadow 0.25s ease;
+}
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 40px -20px rgba(11, 28, 48, 0.35);
+}
+
+/* Animaciones / 动画 */
+@keyframes flotar {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+.animar-flotar {
+  animation: flotar 6s ease-in-out infinite;
+}
+
+@keyframes aparecer {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animar-aparecer {
+  animation: aparecer 0.7s ease-out both;
+}
+
+@keyframes brillo {
+  0% {
+    background-position: -150% 0;
+  }
+  100% {
+    background-position: 250% 0;
+  }
+}
+.animar-brillo {
+  background-image: linear-gradient(
+    100deg,
+    transparent 25%,
+    rgba(255, 255, 255, 0.12) 50%,
+    transparent 75%
+  );
+  background-size: 250% 100%;
+  animation: brillo 5s linear infinite;
+}
+
+/* Estilos globales / 全局样式
+   Sistema de Donaciones de Alimentos RD
+   Paleta y guía: docs/es/03-guia-diseno.md */
+
+:root {
+  /* Colores / 配色 */
+  --color-primario: #2e7d32;
+  --color-primario-claro: #43a047;
+  --color-secundario: #f9a825;
+  --color-secundario-alt: #fb8c00;
+  --color-fondo: #ffffff;
+  --color-fondo-gris: #f5f5f5;
+  --color-borde: #e0e0e0;
+  --color-control: #0d47a1;
+  --color-texto: #212121;
+  --color-texto-suave: #616161;
+  --color-exito: #2e7d32;
+  --color-aviso: #f9a825;
+  --color-error: #c62828;
+
+  /* Medidas / 尺寸 */
+  --radio-borde: 8px;
+  --espacio: 8px;
+  --sombra: 0 1px 3px rgba(0, 0, 0, 0.12);
+
+  --fuente: system-ui, "Segoe UI", Roboto, sans-serif;
+
+  font-family: var(--fuente);
+  color: var(--color-texto);
+  background-color: var(--color-fondo-gris);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+
+h1,
+h2,
+h3 {
+  color: var(--color-texto);
+  margin: 0 0 var(--espacio);
+}
+
+a {
+  color: var(--color-control);
+}
+
+/* Botón / 按钮 */
+.boton {
+  font: inherit;
+  font-weight: 600;
+  color: #fff;
+  background-color: var(--color-primario);
+  border: none;
+  border-radius: var(--radio-borde);
+  padding: 10px 18px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.boton:hover {
+  background-color: var(--color-primario-claro);
+}
+
+/* Tarjeta / 卡片 */
+.tarjeta {
+  background-color: var(--color-fondo);
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-borde);
+  box-shadow: var(--sombra);
+  padding: 20px;
+}
+
+/* Formularios / 表单 */
+.formulario {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.campo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.campo label {
+  font-size: 14px;
+  color: var(--color-texto-suave);
+}
+
+.campo input,
+.campo select {
+  font: inherit;
+  padding: 8px 10px;
+  border: 1px solid var(--color-borde);
+  border-radius: var(--radio-borde);
+}
+
+.campo input:focus,
+.campo select:focus {
+  outline: 2px solid var(--color-primario);
+  border-color: var(--color-primario);
+}
+
+.mensaje-error {
+  color: var(--color-error);
+  font-size: 14px;
+  margin: 0;
+}
+
+a.boton {
+  text-decoration: none;
+  display: inline-block;
+}

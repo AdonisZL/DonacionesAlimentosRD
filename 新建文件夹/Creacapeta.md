@@ -1,4 +1,4 @@
-tuiPS C:\Users\Adonl\Desktop\Tesis\DonacionesAlimentosRD> mkdir frontend
+PS C:\Users\Adonl\Desktop\Tesis\DonacionesAlimentosRD> mkdir frontend
 
 目录: C:\Users\Adonl\Desktop\Tesis\DonacionesAlimentosRD
 Mode                 LastWriteTime         Length Name
@@ -83,6 +83,7 @@ Backend后端打开网址：
 cd C:\Users\Adonl\Desktop\Tesis\DonacionesAlimentosRD\backend
 venv\Scripts\activate
 uvicorn app.main:app --reload
+或者：.\venv\Scripts\python.exe -m uvicorn app.main:app --host 127.0.0.1 --port 8001 --reload
 
 Swagger 自动生成
 http://127.0.0.1:8000/docs
@@ -93,3 +94,20 @@ postgres
 
 Password:
 9709
+
+
+
+Cuentas de prueba / 测试账号
+Contraseña común / 通用密码: DemoRD2026! (mínimo 10 caracteres) / （至少10位）
+
+Rol	Correo	Qué puedes probar
+🏦 Banco	banco.demo@ejemplo.com	Todo: inventario, alertas, emparejamientos, reportes y reporte fiscal
+🏪 Donante	donante.demo@ejemplo.com	Sus lotes + buscar receptores
+🍽️ Receptor 1	comedor.demo@ejemplo.com	Recibe emparejamientos (tiene cadena de frío)
+🤝 Receptor 2	fundacion.demo@ejemplo.com	Receptor sin cadena de frío
+
+
+
+
+Cuenta de administrador / 管理员账号
+admin.demo@ejemplo.com / AdminRD2026! (creada con scripts/crear_admin.py, no por API por seguridad). / 通过脚本创建，非 API。

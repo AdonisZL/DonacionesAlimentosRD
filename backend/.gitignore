@@ -1,0 +1,13 @@
+# Entorno virtual / 虚拟环境
+venv/
+
+# Caché de Python / Python 缓存
+__pycache__/
+*.pyc
+*.pyo
+
+# Variables de entorno con secretos / 含密钥的环境变量
+.env
+
+# Registros / 日志
+*.log
