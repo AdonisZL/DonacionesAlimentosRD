@@ -17,6 +17,7 @@ Bienvenido a la documentación estándar del sistema de donaciones de alimentos.
 | Estándares de código / 代码规范 | [es/05-estandares-codigo.md](es/05-estandares-codigo.md) | [zh/05-代码规范.md](zh/05-代码规范.md) |
 | Seguridad / 安全规范 | [es/06-seguridad.md](es/06-seguridad.md) | [zh/06-安全规范.md](zh/06-安全规范.md) |
 | Configuración de entorno / 环境配置 | [es/07-configuracion-entorno.md](es/07-configuracion-entorno.md) | [zh/07-环境配置.md](zh/07-环境配置.md) |
+| Auditoría de cobertura (plan de cierre) / 覆盖审计（弥补计划） | [es/08-auditoria-cobertura.md](es/08-auditoria-cobertura.md) | [zh/08-审计覆盖.md](zh/08-审计覆盖.md) |
 
 ## Cómo usar / 如何使用
 
