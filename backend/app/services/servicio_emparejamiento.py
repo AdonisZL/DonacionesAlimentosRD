@@ -12,6 +12,8 @@ from datetime import datetime, timedelta, timezone
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
+from geoalchemy2.shape import to_shape
+
 from app.models.categoria_alimento import CategoriaAlimento
 from app.models.direccion_sede import DireccionSede
 from app.models.emparejamiento import Emparejamiento
@@ -25,6 +27,7 @@ from app.models.rol import Rol
 from app.models.usuario import Usuario
 from app.schemas.emparejamiento import RetroalimentacionCrear
 from app.services import servicio_ia
+from app.services.servicio_mapas import calcular_tiempo_viaje
 
 # RN-12: retiro máximo 48 horas tras confirmar / 确认后最长 48 小时取货
 HORAS_LIMITE_RETIRO = 48
@@ -121,6 +124,38 @@ def buscar_candidatos(
             capacidad_diaria_kg=cap,
         )
 
+        # RF-17 (actualizado): calcular tiempo estimado de llegada
+        # 计算预计到达时间（Google Maps Distance Matrix — simulado）
+        try:
+            if sede.coordenadas is not None:
+                lat_origen = (
+                    sede_origen.coordenadas.lat
+                    if hasattr(sede_origen.coordenadas, "lat")
+                    else None
+                )
+                lon_origen = (
+                    sede_origen.coordenadas.lon
+                    if hasattr(sede_origen.coordenadas, "lon")
+                    else None
+                )
+                lat_dest = (
+                    sede.coordenadas.lat if hasattr(sede.coordenadas, "lat") else None
+                )
+                lon_dest = (
+                    sede.coordenadas.lon if hasattr(sede.coordenadas, "lon") else None
+                )
+
+                if lat_origen and lat_dest:
+                    mapa = calcular_tiempo_viaje(
+                        lat_origen, lon_origen, lat_dest, lon_dest
+                    )
+                else:
+                    mapa = {"distancia_google_km": None, "tiempo_estimado_min": None}
+            else:
+                mapa = {"distancia_google_km": None, "tiempo_estimado_min": None}
+        except Exception:
+            mapa = {"distancia_google_km": None, "tiempo_estimado_min": None}
+
         candidatos.append(
             {
                 "id_sede": sede.id_sede,
@@ -128,6 +163,8 @@ def buscar_candidatos(
                 "nombre_sede": sede.nombre_sede,
                 "direccion_texto": sede.direccion_texto,
                 "distancia_km": dist_km,
+                "distancia_google_km": mapa.get("distancia_google_km"),
+                "tiempo_estimado_min": mapa.get("tiempo_estimado_min"),
                 "tiene_cadena_frio": bool(sede.tiene_cadena_frio),
                 "capacidad_diaria_kg": cap,
                 "compatible": compatible,

@@ -7,6 +7,7 @@ import { Link, NavLink, useNavigate } from "react-router-dom";
 import { obtenerRoles } from "../api/autenticacion.js";
 import { useSesion } from "../context/ContextoSesion.jsx";
 import Marca from "./Marca.jsx";
+import CampanaNotificaciones from "./CampanaNotificaciones.jsx";
 
 const ENLACES = [
   { a: "/", texto: "Inicio", icono: "home" },
@@ -91,6 +92,7 @@ function EncabezadoApp() {
         </nav>
 
         <div className="flex items-center gap-sm">
+          <CampanaNotificaciones />
           {usuario && (
             <span className="hidden sm:flex items-center gap-xs text-on-surface-variant font-label-md text-label-md">
               <span className="w-8 h-8 rounded-full bg-gradient-to-br from-primary-container/30 to-primary/20 text-primary flex items-center justify-center font-headline-md ring-2 ring-primary/10">

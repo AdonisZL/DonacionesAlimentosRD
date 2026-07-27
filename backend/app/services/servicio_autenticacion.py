@@ -27,6 +27,7 @@ from app.utils.seguridad import (
     hashear_token,
     verificar_contrasena,
 )
+from app.utils.cifrado import cifrar_aes256
 
 # RF-30: protección contra fuerza bruta / 防暴力破解
 MAX_INTENTOS_FALLIDOS = 5
@@ -96,11 +97,12 @@ def registrar_usuario(
     )
 
     # Perfil legal (RNC) si se proporcionó / 若提供 RNC 则创建法律信息 (RN-01)
+    # RNF-12: cifrar RNC antes de guardar en BD / 保存前加密 RNC
     if datos.rnc:
         sesion.add(
             PerfilLegal(
                 id_usuario=usuario.id_usuario,
-                rnc=datos.rnc,
+                rnc=cifrar_aes256(datos.rnc),
                 telefono=datos.telefono,
                 consentimiento_172_13=datos.consentimiento_172_13,
                 fecha_consentimiento=datetime.now(timezone.utc),

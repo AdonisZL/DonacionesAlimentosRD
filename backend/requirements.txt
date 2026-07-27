@@ -15,5 +15,8 @@ python-multipart>=0.0.9
 email-validator>=2.0
 GeoAlchemy2>=0.15
 
+# Cifrado AES-256 (Fase 6, RNF-12) / AES-256 加密
+cryptography>=41.0
+
 # Fases posteriores (se activarán cuando se necesiten) / 后续阶段（需要时再启用）
 # pytest                       # pruebas

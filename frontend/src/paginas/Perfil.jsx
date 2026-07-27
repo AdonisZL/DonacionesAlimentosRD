@@ -1,7 +1,7 @@
 // Página de perfil / 个人资料页 (RF-07 editar, RF-08 desactivar)
 
 import { useState } from "react";
-import { Navigate, useNavigate } from "react-router-dom";
+import { Link, Navigate, useNavigate } from "react-router-dom";
 
 import { actualizarPerfil, desactivarCuenta } from "../api/autenticacion.js";
 import { useSesion } from "../context/ContextoSesion.jsx";
@@ -118,6 +118,27 @@ function Perfil() {
               </button>
             </div>
           </form>
+        </section>
+
+        {/* Derechos ARCO (Ley 172-13) */}
+        <section className="mt-xl bg-surface-container-lowest rounded-2xl border border-outline-variant/30 p-xl shadow-sm hover-lift-sm">
+          <div className="flex items-center gap-sm mb-md">
+            <span className="material-symbols-outlined text-primary">shield_person</span>
+            <h2 className="font-headline-md text-headline-md text-on-surface">
+              Derechos ARCO
+            </h2>
+          </div>
+          <p className="font-body-md text-body-md text-on-surface-variant mb-md">
+            La Ley 172-13 te otorga los derechos de Acceso, Rectificación,
+            Cancelación y Oposición sobre tus datos personales.
+          </p>
+          <Link
+            to="/mis-derechos"
+            className="inline-flex items-center gap-xs py-sm px-lg rounded-lg bg-primary text-on-primary font-label-md text-label-md font-semibold hover:shadow-lg hover:shadow-primary/25 hover:scale-[1.02] transition-all"
+          >
+            <span className="material-symbols-outlined text-sm">arrow_forward</span>
+            Ejercer mis derechos ARCO
+          </Link>
         </section>
 
         {/* Desactivar cuenta */}

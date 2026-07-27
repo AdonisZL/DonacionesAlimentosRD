@@ -309,14 +309,15 @@ function Registro() {
               {rolElegido === "donante" && (
                 <div className="flex flex-col gap-sm">
                   <span className="font-label-md text-label-md text-on-surface">Subtipo de donante</span>
-                  <div className="flex gap-sm">
+                  <div className="flex flex-col sm:flex-row gap-sm">
                     {[
-                      { v: "formal", t: "Formalizado (con RNC)", icono: "business" },
-                      { v: "informal", t: "Especial / Agrícola", icono: "agriculture" },
+                      { v: "formal", t: "Formalizado (RNC y Razón Social)", icono: "business", ayuda: "Empresa registrada con RNC" },
+                      { v: "informal", t: "Informal (nombre del negocio)", icono: "store", ayuda: "Negocio sin RNC, con ubicación" },
+                      { v: "independiente", t: "Independiente (Cédula o Pasaporte)", icono: "person", ayuda: "Persona física con documento de identidad" },
                     ].map((s) => (
                       <label
                         key={s.v}
-                        className={`flex-1 flex items-center gap-sm p-sm border-2 rounded-xl cursor-pointer transition-all duration-200 ${
+                        className={`flex-1 flex flex-col items-center gap-xs p-sm border-2 rounded-xl cursor-pointer transition-all duration-200 text-center ${
                           formulario.subtipo_donante === s.v
                             ? "border-primary bg-primary/5 shadow-sm"
                             : "border-outline-variant/40 hover:bg-surface-container-low"
@@ -328,10 +329,11 @@ function Registro() {
                           value={s.v}
                           checked={formulario.subtipo_donante === s.v}
                           onChange={() => cambiar("subtipo_donante", s.v)}
-                          className="text-primary focus:ring-primary"
+                          className="text-primary focus:ring-primary sr-only"
                         />
-                        <span className="material-symbols-outlined text-on-surface-variant text-sm">{s.icono}</span>
-                        <span className="font-body-md text-body-md text-on-surface">{s.t}</span>
+                        <span className="material-symbols-outlined text-2xl text-on-surface-variant">{s.icono}</span>
+                        <span className="font-label-md text-label-md text-on-surface">{s.t}</span>
+                        <span className="font-label-sm text-label-sm text-on-surface-variant">{s.ayuda}</span>
                       </label>
                     ))}
                   </div>

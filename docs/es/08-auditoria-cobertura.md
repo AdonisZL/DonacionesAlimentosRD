@@ -1,9 +1,28 @@
 # Auditoría de Cobertura de Requisitos — Plan de Cierre de Brechas
 # 需求覆盖审计 — 差距弥补计划
 
-> **Fecha**: 2026-07-20  
+> **Fecha**: 2026-07-27 (actualizado) | 2026-07-20 (original)  
 > **Propósito**: Comparar lo implementado contra los 32 RF + 20 RN + 18 RNF y planificar los pasos restantes.  
 > **目的**: 对比已实现内容与 32 个功能需求 + 20 个业务规则 + 18 个非功能需求，规划剩余步骤。
+
+---
+
+## 🔄 Cambios en docs/es/ — 2026-07-27
+
+> El usuario actualizó 4 documentos en `docs/es/`. A continuación se resumen los cambios sustantivos y su impacto en el código.
+
+| Archivo modificado | Cambio sustantivo | Impacto en código |
+|---|---|---|
+| `01-requisitos.md` | **RF-01**: 3 categorías de donante (formalizado, informal, independiente) — antes eran 2 | Verificar que backend valide `subtipo_donante` y frontend muestre las 3 |
+| `01-requisitos.md` | **RF-17**: Agrega Google Maps API (Distance Matrix) como criterio de desempate en emparejamiento | **NUEVA BRECHA**: No hay integración con Google Maps. La tabla `emparejamientos` ya tiene `distancia_google_km` y `tiempo_estimado_min` sin usar |
+| `01-requisitos.md` | **RF-18**: Gemini limitado a normalización semántica + explicación textual (temperatura 0.0) | El servicio simulado actual debe respetar estas restricciones al integrar la API real |
+| `01-requisitos.md` | **RNF-12**: AES-256 explícito para cifrado de RNC/cédulas (antes solo RBAC + TDE) | **NUEVA BRECHA**: No hay cifrado a nivel de campo. RNC/cédulas en texto claro en BD |
+| `01-requisitos.md` | **OE3**: Google Maps API ahora es parte del objetivo central de emparejamiento | Refuerza RF-17 como nueva brecha |
+| `06-seguridad.md` | **Sección 4**: AES-256 + RBAC mínimo privilegio para datos personales | Misma brecha que RNF-12 arriba |
+| `02-arquitectura-tecnica.md` | Gemini IA: descripción más precisa del simulador | Sin impacto en código (solo documentación) |
+| `04-plan-desarrollo.md` | Fase 3 reestructurada con subsecciones (PostGIS, Gemini IA, Validación humana) | Sin impacto en código (solo documentación) |
+
+> **Conclusión de la revisión**: Los cambios en docs introducen **2 nuevas brechas** (Google Maps API y AES-256) y **refuerzan 1 verificación** (3 subtipos de donante). El resto son mejoras de redacción sin impacto en código.
 
 ---
 
@@ -11,17 +30,18 @@
 
 | Indicador | Valor |
 |---|---|
-| **RF cubiertos** (funcionalidad core) | **32/32** ✅ (100% lógica de negocio) |
-| **RF con implementación parcial** | 4 (RF-13, RF-25, RF-26, RF-27 — falta integración real/conexión UI) |
-| **RN con implementación pendiente** | 2 (RN-08: identificador de lote, RN-19: ARCO) |
-| **RNF con implementación pendiente** | 10 (pruebas, accesibilidad, TLS, i18n, respaldos, rendimiento, etc.) |
+| **RF cubiertos** (funcionalidad core) | **30/32** ⚠️ (2 RF requieren nueva funcionalidad: RF-17 Google Maps, RF-01 validación de subtipos) |
+| **RF con implementación parcial** | 6 (RF-01, RF-13, RF-17, RF-25, RF-26, RF-27) |
+| **RN con implementación pendiente** | 3 (RN-08: identificador de lote, RN-19: ARCO, RN-12 AES-256) |
+| **RNF con implementación pendiente** | 11 (pruebas, accesibilidad, TLS, i18n, AES-256, respaldos, rendimiento, etc.) |
 | **Tablas SQL sin modelo backend** | 3 (`donaciones`, `evidencia_entrega`, `solicitudes_arco`) |
-| **Funcionalidades sin UI frontend** | 3 (notificaciones, evidencia de entrega, ARCO) |
+| **Funcionalidades sin UI frontend** | 4 (notificaciones, evidencia de entrega, ARCO, Google Maps) |
+| **Nuevas brechas detectadas (2026-07-27)** | 3 (G16: Google Maps API, G17: AES-256 cifrado, G18: validación subtipo donante) |
 | **Deuda técnica** | Archivos huérfanos `index.css`/`App.css`, sin tests, sin i18n |
 
-> **Conclusión**: El MVP funcional está COMPLETO. Los 32 RF tienen backend y frontend operativos.  
-> Las brechas son de **calidad, seguridad, UX complementaria e integración real**.  
-> **结论**: 功能 MVP 已完整。32 个功能需求均有可运行的后端和前端。差距在于**质量、安全、补充 UX 和真实集成**。
+> **Conclusión actualizada**: El MVP funcional base está COMPLETO, pero los cambios en requisitos (2026-07-27) introducen **Google Maps API** y **AES-256** como nuevas funcionalidades requeridas. Las brechas ahora incluyen estas 2 adiciones además de calidad, seguridad, UX complementaria e integración real.
+
+---
 
 ---
 
@@ -31,7 +51,7 @@
 
 | RF | Descripción | Backend | Frontend | Estado |
 |---|---|---|---|---|
-| RF-01 | Registro donantes | ✅ `POST /api/auth/registro` con campos por rol | ✅ `Registro.jsx` 2 pasos | **COMPLETO** |
+| RF-01 | Registro donantes (3 categorías) | ✅ `POST /api/auth/registro` con `subtipo_donante` | ⚠️ `Registro.jsx` — **verificar que muestre 3 subtipos** (formal, informal, independiente) | **⚠️ VERIFICAR** (docs actualizados 2026-07-27 piden 3 categorías explícitas) |
 | RF-02 | Registro receptores | ✅ RNC + capacidad + sede | ✅ Paso 2 dinámico | **COMPLETO** |
 | RF-03 | Registro banco | ✅ cadena frío + horario | ✅ Paso 2 dinámico | **COMPLETO** |
 | RF-04 | Auth JWT + bcrypt ≥ 12 | ✅ `POST /api/auth/login` | ✅ `Login.jsx` | **COMPLETO** |
@@ -59,7 +79,7 @@
 
 | RF | Descripción | Backend | Frontend | Estado |
 |---|---|---|---|---|
-| RF-17 | Búsqueda PostGIS | ✅ `POST /candidatos` (radio configurable) | ✅ Selector lote + radio | **COMPLETO** |
+| RF-17 | Búsqueda PostGIS + Google Maps API | ✅ `POST /candidatos` (radio configurable por PostGIS) | ✅ Selector lote + radio | **⚠️ PARCIAL** (falta Google Maps Distance Matrix para tiempo real de llegada. Tabla ya tiene `distancia_google_km` y `tiempo_estimado_min` sin usar) |
 | RF-18 | Justificación IA | ✅ `servicio_ia.py` (simulado, determinista) | ✅ Texto IA en tarjeta | **COMPLETO** |
 | RF-19 | Confirmación manual | ✅ `POST /confirmar` | ✅ Botón Confirmar | **COMPLETO** |
 | RF-20 | Reasignación | ✅ `POST /rechazar` libera lote | ✅ Botón Rechazar | **COMPLETO** |
@@ -95,6 +115,7 @@
 | G01 | **ARCO no implementado** | RN-19 | Los usuarios no pueden ejercer derechos de acceso/rectificación/cancelación/oposición en ≤ 15 días. La tabla `solicitudes_arco` existe en SQL pero no tiene modelo, servicio ni endpoint. |
 | G02 | **Sin TLS** | RNF-11 | La API corre en HTTP. Para producción se requiere HTTPS con TLS 1.2+. |
 | G03 | **Sin escaneo de seguridad** | RNF-13 | No se ha ejecutado OWASP ZAP. Podría haber vulnerabilidades no detectadas. |
+| G16 | **🆕 Sin cifrado AES-256 para RNC/cédulas** | RNF-12 | El requisito actualizado (2026-07-27) exige cifrado AES-256 a nivel de campo para RNC y cédulas. Actualmente se almacenan en texto claro. Hay que crear `utils/cifrado.py` + migrar datos existentes. |
 
 ### 🟡 Importantes (calidad y completitud) / 重要（质量与完整性）
 
@@ -105,7 +126,7 @@
 | G06 | **RF-13 alertas por correo** | RF-13 | Solo se muestran en plataforma. Falta envío por correo a donantes con lotes próximos a vencer. |
 | G07 | **RF-21 sin vista de notificaciones** | RF-21 | La API de notificaciones existe, pero el frontend no tiene campanita/badge ni página de notificaciones. |
 | G08 | **RF-25 sin evidencia de entrega** | RF-25 | La tabla `evidencia_entrega` no tiene modelo ORM. No se puede subir foto/comprobante de entrega. |
-| G09 | **RF-13 envío de correo pendiente** | RF-13 | Las alertas de vencimiento solo se notifican en plataforma, no por correo. |
+| G17 | **🆕 Google Maps Distance Matrix no integrado** | RF-17 | El requisito actualizado exige Google Maps API para calcular tiempos reales de llegada como criterio de desempate. La tabla `emparejamientos` ya tiene los campos `distancia_google_km` y `tiempo_estimado_min` pero no se usan. Hay que crear `servicio_mapas.py` e integrarlo en `servicio_emparejamiento.py`. |
 
 ### 🟢 Menores (UX, deuda técnica, pulido) / 次要（UX、技术债、打磨）
 
@@ -117,6 +138,7 @@
 | G13 | **Sin modo oscuro** | — | No es requisito, pero mejoraría UX. |
 | G14 | **Sin estados de carga (skeleton)** | — | Las páginas muestran "Cargando…" como texto. Sería mejor usar skeletons. |
 | G15 | **Responsive móvil incompleto** | RNF-18 | Algunas tablas no tienen scroll horizontal adecuado en < 360px. |
+| G18 | **🆕 Validar 3 subtipos de donante en frontend** | RF-01 | El requisito actualizado pide 3 categorías explícitas: formalizado, informal, independiente. Verificar que `Registro.jsx` muestre selector con las 3 opciones y que `UsuarioCrear.subtipo_donante` tenga validación de valores permitidos. |
 
 ---
 
@@ -125,7 +147,7 @@
 ### 🔹 Fase 6 — Estabilización y Seguridad (prioridad ALTA)
 
 > **Objetivo**: Cerrar brechas críticas de seguridad y cumplimiento.  
-> **Duración estimada**: 2–3 sesiones
+> **Duración estimada**: 3–4 sesiones
 
 | Paso | Tarea | Archivos |
 |---|---|---|
@@ -136,9 +158,18 @@
 | | d) Crear router `arco.py` (POST /solicitar, GET /mis-solicitudes, admin GET /todas, PUT /resolver) | `backend/app/routers/arco.py` |
 | | e) Frontend: página `MisDerechos.jsx` con formulario ARCO | `frontend/src/paginas/MisDerechos.jsx` |
 | | f) Enlace en Perfil "Ejercer derechos ARCO" | `frontend/src/paginas/Perfil.jsx` |
-| 6.2 | **Escaneo OWASP ZAP + corrección** | Ejecutar ZAP, documentar hallazgos, corregir |
-| 6.3 | **Verificar HTTPS en despliegue** | `backend/app/main.py` (redirigir HTTP→HTTPS si aplica) |
-| 6.4 | **Revisar exposición de datos sensibles** | Todos los schemas `*Leer` |
+| | g) Ruta `/mis-derechos` en App.jsx | `frontend/src/App.jsx` |
+| 6.2 | **🆕 Implementar AES-256 para RNC/cédulas (G16, RNF-12)** | |
+| | a) Crear `utils/cifrado.py` con funciones `cifrar_aes256()` / `descifrar_aes256()` | `backend/app/utils/cifrado.py` (nuevo) |
+| | b) Agregar `CLAVE_AES256` a `.env` y `configuracion.py` | `backend/app/config/configuracion.py` + `.env.example` |
+| | c) Cifrar RNC en `perfiles_legales` al guardar; descifrar al leer | `backend/app/services/servicio_autenticacion.py`, `backend/app/schemas/usuario.py` |
+| | d) Script de migración para cifrar datos existentes | `backend/scripts/migrar_cifrado_aes.py` (nuevo) |
+| 6.3 | **🆕 Validar 3 subtipos de donante (G18, RF-01)** | |
+| | a) Agregar `field_validator` en `UsuarioCrear.subtipo_donante` con valores permitidos | `backend/app/schemas/usuario.py` |
+| | b) Verificar que `Registro.jsx` muestre selector con 3 opciones: formalizado, informal, independiente | `frontend/src/paginas/Registro.jsx` |
+| 6.4 | **Escaneo OWASP ZAP + corrección** | Ejecutar ZAP, documentar hallazgos, corregir |
+| 6.5 | **Verificar HTTPS en despliegue** | `backend/app/main.py` (redirigir HTTP→HTTPS si aplica) |
+| 6.6 | **Revisar exposición de datos sensibles** | Todos los schemas `*Leer` |
 
 ### 🔹 Fase 7 — Calidad y Pruebas (prioridad ALTA)
 
@@ -159,7 +190,7 @@
 ### 🔹 Fase 8 — Funcionalidad Complementaria (prioridad MEDIA)
 
 > **Objetivo**: Completar funcionalidades parciales.  
-> **Duración estimada**: 2–3 sesiones
+> **Duración estimada**: 3–4 sesiones
 
 | Paso | Tarea | Archivos |
 |---|---|---|
@@ -171,10 +202,15 @@
 | | a) Modelo `evidencia_entrega.py` | `backend/app/models/evidencia_entrega.py` |
 | | b) Endpoint `POST /api/entregas/{id}/evidencia` | `backend/app/routers/` |
 | | c) Frontend: upload de foto al completar entrega | `Emparejamientos.jsx` |
-| 8.3 | **Alertas por correo (RF-13)** | |
+| 8.3 | **🆕 Google Maps Distance Matrix (G17, RF-17)** | |
+| | a) Crear `servicio_mapas.py` con función `calcular_tiempo_viaje()` (simulado inicialmente) | `backend/app/services/servicio_mapas.py` (nuevo) |
+| | b) Integrar en `buscar_candidatos()` para ordenar por tiempo real de llegada | `backend/app/services/servicio_emparejamiento.py` |
+| | c) Mostrar tiempo estimado en frontend (tarjeta de candidato) | `frontend/src/paginas/Emparejamientos.jsx` |
+| | d) Guardar `distancia_google_km` y `tiempo_estimado_min` en emparejamiento | `backend/app/models/emparejamiento.py` (campos ya existen) |
+| 8.4 | **Alertas por correo (RF-13)** | |
 | | a) Script/tarea que revise lotes ≤ 3 días y envíe correo | `backend/app/services/servicio_alertas.py` (nuevo) |
 | | b) Endpoint para disparar manualmente | O tarea programada (APScheduler) |
-| 8.4 | **i18n (RNF-10)** | |
+| 8.5 | **i18n (RNF-10)** | |
 | | a) Instalar `react-i18next` | `frontend/` |
 | | b) Extraer textos a `es.json` | `frontend/src/i18n/locales/es.json` |
 | | c) Crear `en.json` con traducciones | `frontend/src/i18n/locales/en.json` |
@@ -224,18 +260,70 @@
 
 | Documento | Ruta |
 |---|---|
-| Requisitos (ES) | `docs/es/01-requisitos.md` |
+| Requisitos (ES) — **ACTUALIZADO 2026-07-27** | `docs/es/01-requisitos.md` |
 | 需求规格 (ZH) | `docs/zh/01-需求规格.md` |
-| Plan de desarrollo | `docs/es/04-plan-desarrollo.md` |
-| Seguridad | `docs/es/06-seguridad.md` |
-| Arquitectura | `docs/es/02-arquitectura-tecnica.md` |
+| Plan de desarrollo — **ACTUALIZADO 2026-07-27** | `docs/es/04-plan-desarrollo.md` |
+| Seguridad — **ACTUALIZADO 2026-07-27** | `docs/es/06-seguridad.md` |
+| Arquitectura — **ACTUALIZADO 2026-07-27** | `docs/es/02-arquitectura-tecnica.md` |
 | Bitácora 07-18 | `bitacora-desarrollo/2026-07-18.md` |
 | Bitácora 07-20 | `bitacora-desarrollo/2026-07-20.md` |
+| Bitácora 07-27 | `bitacora-desarrollo/2026-07-27.md` (crear) |
 | Esquema SQL | `backend/basedatos/01_esquema.sql` |
 | Backend principal | `backend/app/main.py` |
 | Frontend principal | `frontend/src/App.jsx` |
 
 ---
+
+## 7. Resumen de cambios requeridos en código / 代码变更汇总
+
+> **Nuevos archivos a crear**: 8 | **Archivos a modificar**: 10 | **Archivos a verificar**: 3
+
+### Backend — archivos NUEVOS a crear
+
+| Archivo | Fase | Propósito |
+|---|---|---|
+| `backend/app/models/solicitud_arco.py` | 6.1 | Modelo ORM para `solicitudes_arco` |
+| `backend/app/schemas/arco.py` | 6.1 | Schemas Pydantic ARCO |
+| `backend/app/services/servicio_arco.py` | 6.1 | Lógica de negocio ARCO |
+| `backend/app/routers/arco.py` | 6.1 | Endpoints REST ARCO |
+| `backend/app/utils/cifrado.py` | 6.2 | Funciones AES-256 (cifrar/descifrar) |
+| `backend/scripts/migrar_cifrado_aes.py` | 6.2 | Migración de datos existentes |
+| `backend/app/services/servicio_mapas.py` | 8.3 | Google Maps Distance Matrix (simulado) |
+| `backend/app/services/servicio_alertas.py` | 8.4 | Alertas por correo para lotes próximos a vencer |
+
+### Backend — archivos a MODIFICAR
+
+| Archivo | Fase | Cambio requerido |
+|---|---|---|
+| `backend/app/schemas/usuario.py` | 6.3 | Agregar `field_validator` para `subtipo_donante` (formal/informal/independiente) |
+| `backend/app/config/configuracion.py` | 6.2 | Agregar `CLAVE_AES256` |
+| `backend/app/services/servicio_autenticacion.py` | 6.2 | Cifrar RNC al guardar, descifrar al leer |
+| `backend/app/services/servicio_emparejamiento.py` | 8.3 | Integrar `servicio_mapas` en `buscar_candidatos()` |
+| `backend/app/main.py` | 6.1/6.5 | Registrar router `arco.py`; configurar redirección HTTPS |
+| `backend/requirements.txt` | 7.1 | Agregar pytest, pytest-cov, httpx |
+| `backend/.env.example` | 6.2 | Agregar `CLAVE_AES256` |
+
+### Frontend — archivos NUEVOS a crear
+
+| Archivo | Fase | Propósito |
+|---|---|---|
+| `frontend/src/paginas/MisDerechos.jsx` | 6.1 | Página de ejercicio de derechos ARCO |
+| `frontend/src/paginas/Notificaciones.jsx` | 8.1 | Página de listado de notificaciones |
+| `frontend/src/componentes/CampanaNotificaciones.jsx` | 8.1 | Componente campanita con badge |
+| `frontend/src/i18n/locales/es.json` | 8.5 | Traducciones español |
+| `frontend/src/i18n/locales/en.json` | 8.5 | Traducciones inglés |
+| `frontend/src/__tests__/` | 7.8 | Pruebas frontend con Vitest |
+| `backend/tests/` | 7.2-7.7 | Pruebas backend con pytest |
+
+### Frontend — archivos a MODIFICAR
+
+| Archivo | Fase | Cambio requerido |
+|---|---|---|
+| `frontend/src/paginas/Registro.jsx` | 6.3 | Verificar/mostrar 3 subtipos de donante (formalizado, informal, independiente) |
+| `frontend/src/paginas/Perfil.jsx` | 6.1 | Agregar enlace "Ejercer derechos ARCO" |
+| `frontend/src/App.jsx` | 6.1/8.1 | Agregar rutas `/mis-derechos` y `/notificaciones` |
+| `frontend/src/componentes/EncabezadoApp.jsx` | 8.1 | Integrar `CampanaNotificaciones` |
+| `frontend/src/paginas/Emparejamientos.jsx` | 8.2/8.3 | Subida de evidencia + mostrar tiempo estimado Google Maps |
 
 > **Este documento debe leerse al inicio de cada sesión de la Fase 6 en adelante.**  
 > **从第 6 阶段开始，每次工作前应阅读本文档。**

@@ -7,8 +7,12 @@ Registra middlewares (CORS) y los routers por dominio.
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.config.configuracion import configuracion
+from app.utils.cifrado import configurar_clave_aes
+
 from app.routers import (
     admin,
+    arco,
     autenticacion,
     emparejamiento,
     inventario,
@@ -17,6 +21,10 @@ from app.routers import (
 )
 
 app = FastAPI(title="Sistema de Donaciones de Alimentos", version="1.0")
+
+# Inicializar cifrado AES-256 para datos sensibles (RNF-12) / 初始化 AES-256 加密
+if configuracion.clave_aes256:
+    configurar_clave_aes(configuracion.clave_aes256)
 
 # CORS: permitir el frontend de Vite en desarrollo / 允许开发环境的 Vite 前端
 ORIGENES_PERMITIDOS = [
@@ -39,6 +47,7 @@ app.include_router(inventario.enrutador)
 app.include_router(emparejamiento.enrutador)
 app.include_router(reporte.enrutador)
 app.include_router(admin.enrutador)
+app.include_router(arco.enrutador)
 
 
 @app.get("/")

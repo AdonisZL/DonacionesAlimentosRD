@@ -35,6 +35,10 @@ class Configuracion(BaseSettings):
     jwt_algoritmo: str = "HS256"
     jwt_minutos_expiracion: int = 60
 
+    # Cifrado AES-256 para datos sensibles (RNF-12)
+    # AES-256 敏感数据加密密钥
+    clave_aes256: str = ""
+
     @property
     def url_base_datos(self) -> str:
         """Cadena de conexión SQLAlchemy / SQLAlchemy 连接字符串."""

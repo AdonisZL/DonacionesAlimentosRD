@@ -18,6 +18,8 @@ class CandidatoEmparejamiento(BaseModel):
     nombre_sede: str | None = None
     direccion_texto: str | None = None
     distancia_km: float
+    distancia_google_km: float | None = None
+    tiempo_estimado_min: float | None = None
     tiene_cadena_frio: bool | None = None
     capacidad_diaria_kg: float | None = None
     compatible: bool = True
@@ -76,3 +78,15 @@ class NotificacionLeer(BaseModel):
     mensaje: str | None = None
     leido: bool | None = None
     creado_en: datetime | None = None
+
+
+class EvidenciaLeer(BaseModel):
+    """Evidencia de entrega para respuesta / 返回的交付凭证 (RF-25)."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id_evidencia: uuid.UUID
+    id_entrega: uuid.UUID
+    tipo_archivo: str | None = None
+    archivo_url: str
+    subido_en: datetime | None = None
