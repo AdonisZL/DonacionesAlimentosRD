@@ -60,3 +60,9 @@ export async function desactivarCuenta() {
   const { data } = await cliente.post("/api/auth/desactivar");
   return data;
 }
+
+// Obtener sede/dirección del usuario / 获取用户地址 (RF-07)
+export async function obtenerSede() {
+  const { data } = await cliente.get("/api/auth/sede");
+  return data;
+}

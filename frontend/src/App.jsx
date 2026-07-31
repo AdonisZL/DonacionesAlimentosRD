@@ -9,6 +9,7 @@ import Emparejamientos from './paginas/Emparejamientos.jsx'
 import Reportes from './paginas/Reportes.jsx'
 import Admin from './paginas/Admin.jsx'
 import Notificaciones from './paginas/Notificaciones.jsx'
+import ConsultarRNC from './paginas/ConsultarRNC.jsx'
 import VerificarCorreo from './paginas/VerificarCorreo.jsx'
 import RecuperarPassword from './paginas/RecuperarPassword.jsx'
 import RestablecerPassword from './paginas/RestablecerPassword.jsx'
@@ -26,6 +27,7 @@ function App() {
       <Route path="/reportes" element={<Reportes />} />
       <Route path="/admin" element={<Admin />} />
       <Route path="/notificaciones" element={<Notificaciones />} />
+      <Route path="/consultar-rnc" element={<ConsultarRNC />} />
       <Route path="/verificar-correo" element={<VerificarCorreo />} />
       <Route path="/recuperar-password" element={<RecuperarPassword />} />
       <Route path="/restablecer-password" element={<RestablecerPassword />} />

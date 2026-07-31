@@ -95,8 +95,6 @@ postgres
 Password:
 9709
 
-
-
 Cuentas de prueba / 测试账号
 Contraseña común / 通用密码: DemoRD2026! (mínimo 10 caracteres) / （至少10位）
 
@@ -106,8 +104,10 @@ Rol	Correo	Qué puedes probar
 🍽️ Receptor 1	comedor.demo@ejemplo.com	Recibe emparejamientos (tiene cadena de frío)
 🤝 Receptor 2	fundacion.demo@ejemplo.com	Receptor sin cadena de frío
 
-
-
-
 Cuenta de administrador / 管理员账号
 admin.demo@ejemplo.com / AdminRD2026! (creada con scripts/crear_admin.py, no por API por seguridad). / 通过脚本创建，非 API。
+
+
+
+
+Abra `http://localhost:5173/registro`, haga **Ctrl+Shift+R** para forzar recarga limpia, y pruebe. Debería funcionar.

@@ -148,12 +148,16 @@ CREATE TABLE "evidencia_entrega" (
 
 CREATE TABLE "perfiles_legales" (
   "id_usuario" UUID PRIMARY KEY,
-  "rnc" VARCHAR(11) UNIQUE,
+  "rnc" VARCHAR(255) UNIQUE,
   "telefono" VARCHAR(20),
   "consentimiento_172_13" BOOLEAN NOT NULL DEFAULT false,
-  "fecha_consentimiento" TIMESTAMPTZ,
-  CONSTRAINT "chk_rnc_formal" CHECK (rnc IS NULL OR length(rnc) = 11)
+  "fecha_consentimiento" TIMESTAMPTZ
 );
+-- Nota: RNC se cifra con AES-256-GCM (RNF-12), por lo que el valor en BD
+--       puede tener hasta 56+ caracteres (base64). La validación de formato
+--       se realiza en la capa de aplicación ANTES de cifrar.
+-- 注意：RNC 使用 AES-256-GCM 加密，因此数据库中存储的值可长达 56+ 字符（base64）。
+--       格式校验在加密前于应用层完成。
 
 CREATE TABLE "donaciones" (
   "id_donacion" UUID PRIMARY KEY DEFAULT (uuid_generate_v4()),
@@ -319,4 +323,5 @@ ALTER TABLE "solicitudes_arco" ADD FOREIGN KEY ("id_usuario") REFERENCES "usuari
 ALTER TABLE "solicitudes_arco" ADD FOREIGN KEY ("atendido_por") REFERENCES "usuarios" ("id_usuario") DEFERRABLE INITIALLY IMMEDIATE;
 ALTER TABLE "retroalimentacion" ADD FOREIGN KEY ("id_entrega") REFERENCES "entregas_transacciones" ("id_entrega") DEFERRABLE INITIALLY IMMEDIATE;
 ALTER TABLE "retroalimentacion" ADD FOREIGN KEY ("id_usuario") REFERENCES "usuarios" ("id_usuario") DEFERRABLE INITIALLY IMMEDIATE;
+ALTER TABLE "tokens_recuperacion_password" ADD FOREIGN KEY ("id_usuario") REFERENCES "usuarios" ("id_usuario") DEFERRABLE INITIALLY IMMEDIATE;
 ALTER TABLE "tokens_recuperacion_password" ADD FOREIGN KEY ("id_usuario") REFERENCES "usuarios" ("id_usuario") DEFERRABLE INITIALLY IMMEDIATE;

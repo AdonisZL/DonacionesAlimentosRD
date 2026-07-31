@@ -1,7 +1,7 @@
 # Auditoría de Cobertura de Requisitos — Plan de Cierre de Brechas
 # 需求覆盖审计 — 差距弥补计划
 
-> **Fecha**: 2026-07-27 (actualizado) | 2026-07-20 (original)  
+> **Fecha**: 2026-07-29 (actualizado) | 2026-07-27 | 2026-07-20 (original)  
 > **Propósito**: Comparar lo implementado contra los 32 RF + 20 RN + 18 RNF y planificar los pasos restantes.  
 > **目的**: 对比已实现内容与 32 个功能需求 + 20 个业务规则 + 18 个非功能需求，规划剩余步骤。
 
@@ -30,16 +30,15 @@
 
 | Indicador | Valor |
 |---|---|
-| **RF cubiertos** (funcionalidad core) | **30/32** ⚠️ (2 RF requieren nueva funcionalidad: RF-17 Google Maps, RF-01 validación de subtipos) |
-| **RF con implementación parcial** | 6 (RF-01, RF-13, RF-17, RF-25, RF-26, RF-27) |
-| **RN con implementación pendiente** | 3 (RN-08: identificador de lote, RN-19: ARCO, RN-12 AES-256) |
-| **RNF con implementación pendiente** | 11 (pruebas, accesibilidad, TLS, i18n, AES-256, respaldos, rendimiento, etc.) |
-| **Tablas SQL sin modelo backend** | 3 (`donaciones`, `evidencia_entrega`, `solicitudes_arco`) |
-| **Funcionalidades sin UI frontend** | 4 (notificaciones, evidencia de entrega, ARCO, Google Maps) |
-| **Nuevas brechas detectadas (2026-07-27)** | 3 (G16: Google Maps API, G17: AES-256 cifrado, G18: validación subtipo donante) |
-| **Deuda técnica** | Archivos huérfanos `index.css`/`App.css`, sin tests, sin i18n |
+| **RF cubiertos** (funcionalidad core) | **32/32** ✅ (100%) |
+| **RF con implementación parcial** | 4 (RF-13, RF-25, RF-26, RF-27 — servicios externos simulados) |
+| **RN pendientes** | 1 (RN-08: identificador de lote) |
+| **RNF completados** | RNF-12 (AES-256), RNF-16 (pruebas-parcial), RNF-10 (i18n básico) |
+| **RNF pendientes** | 7 (accesibilidad, TLS, respaldos, rendimiento, WCAG, etc.) |
+| **✅ Pruebas automatizadas** | **25 backend + 2 frontend = 27 todas OK** |
+| **Deuda técnica** | Archivos huérfanos `index.css`/`App.css` |
 
-> **Conclusión actualizada**: El MVP funcional base está COMPLETO, pero los cambios en requisitos (2026-07-27) introducen **Google Maps API** y **AES-256** como nuevas funcionalidades requeridas. Las brechas ahora incluyen estas 2 adiciones además de calidad, seguridad, UX complementaria e integración real.
+> **Conclusión actualizada (2026-07-29)**: Los 32 RF están IMPLEMENTADOS. Fase 6 (seguridad) y Fase 8 (complementos) COMPLETAS. Fase 7 (pruebas) COMPLETA con 27 tests automatizados pasando. Las brechas restantes son de infraestructura y servicios externos.
 
 ---
 

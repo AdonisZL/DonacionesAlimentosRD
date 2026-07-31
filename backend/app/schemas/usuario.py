@@ -33,6 +33,7 @@ class UsuarioCrear(BaseModel):
 
     # Campos por rol (opcionales) / 角色专属字段（可选）
     rnc: str | None = Field(default=None, max_length=11)
+    direccion: str | None = Field(default=None, max_length=150)
     direccion_texto: str | None = Field(default=None, max_length=255)
     latitud: float | None = None
     longitud: float | None = None
@@ -60,11 +61,13 @@ class UsuarioCrear(BaseModel):
     @field_validator("rnc")
     @classmethod
     def validar_rnc(cls, valor: str | None) -> str | None:
-        """El RNC, si se indica, debe tener 11 dígitos / RNC 若填写须为11位数字 (RN-01)."""
+        """El RNC, si se indica, debe tener 9 u 11 dígitos / RNC 若填写须为9或11位数字 (RN-01)."""
         if valor in (None, ""):
             return None
-        if not (valor.isdigit() and len(valor) == 11):
-            raise ValueError("El RNC debe tener exactamente 11 dígitos.")
+        if not (valor.isdigit() and len(valor) in (9, 11)):
+            raise ValueError(
+                "El RNC debe tener 9 dígitos (empresa) o 11 dígitos (cédula)."
+            )
         return valor
 
     @field_validator("subtipo_donante")
@@ -92,6 +95,7 @@ class UsuarioLeer(BaseModel):
     telefono: str | None = None
     email: EmailStr | None = None
     id_rol: uuid.UUID
+    subtipo_donante: str | None = None
     email_verificado: bool
     estado: str
     creado_en: datetime
@@ -145,3 +149,19 @@ class RestablecerContrasena(BaseModel):
         if not _PATRON_SIMBOLO.search(valor):
             raise ValueError("La contraseña debe incluir al menos un símbolo.")
         return valor
+
+
+class SedeLeer(BaseModel):
+    """Datos de la sede/dirección del usuario / 用户地址场所数据."""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id_sede: uuid.UUID | None = None
+    direccion: str | None = None
+    direccion_texto: str | None = None
+    latitud: float | None = None
+    longitud: float | None = None
+    capacidad_diaria_kg: float | None = None
+    tiene_cadena_frio: bool = False
+    horario_atencion: str | None = None
+    estado: str | None = None

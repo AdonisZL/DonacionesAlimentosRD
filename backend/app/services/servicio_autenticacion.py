@@ -8,7 +8,7 @@ import uuid
 from datetime import datetime, timedelta, timezone
 
 from geoalchemy2 import WKTElement
-from sqlalchemy import select
+from sqlalchemy import func as sa_func, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
@@ -119,7 +119,8 @@ def registrar_usuario(
         sesion.add(
             DireccionSede(
                 id_usuario=usuario.id_usuario,
-                nombre_sede=datos.nombre,
+                nombre_sede=datos.direccion or datos.nombre,
+                direccion=datos.direccion,
                 direccion_texto=datos.direccion_texto,
                 coordenadas=punto,
                 capacidad_diaria_kg=datos.capacidad_diaria_kg,
@@ -169,6 +170,52 @@ def desactivar_cuenta(sesion: Session, usuario: Usuario) -> None:
     """Baja lógica: conserva el historial / 逻辑注销：保留历史 (RF-08, Ley 11-92)."""
     usuario.estado = "inactivo"
     sesion.commit()
+
+
+def obtener_sede_usuario(sesion: Session, id_usuario: uuid.UUID) -> dict | None:
+    """Obtiene la sede principal del usuario (la más reciente).
+    获取用户的主要地址场所（最近创建的）。
+
+    Devuelve un diccionario con los datos de la sede o None.
+    返回地址数据字典，无地址则返回 None。
+    """
+    sede = sesion.execute(
+        select(DireccionSede)
+        .where(DireccionSede.id_usuario == id_usuario)
+        .order_by(DireccionSede.creado_en.desc())
+        .limit(1)
+    ).scalar_one_or_none()
+
+    if sede is None:
+        return None
+
+    # Extraer latitud/longitud del punto PostGIS / 从 PostGIS 点提取经纬度
+    lat, lng = None, None
+    if sede.coordenadas is not None:
+        try:
+            # Usar ST_X y ST_Y de PostGIS para extraer coordenadas
+            punto = sesion.execute(
+                select(
+                    sa_func.ST_Y(sede.coordenadas),
+                    sa_func.ST_X(sede.coordenadas),
+                )
+            ).one_or_none()
+            if punto:
+                lat, lng = float(punto[0]), float(punto[1])
+        except Exception:
+            lat, lng = None, None
+
+    return {
+        "id_sede": sede.id_sede,
+        "direccion": sede.direccion,
+        "direccion_texto": sede.direccion_texto,
+        "latitud": lat,
+        "longitud": lng,
+        "capacidad_diaria_kg": sede.capacidad_diaria_kg,
+        "tiene_cadena_frio": sede.tiene_cadena_frio,
+        "horario_atencion": sede.horario_atencion,
+        "estado": sede.estado,
+    }
 
 
 # URL del frontend para los enlaces de correo / 邮件链接用的前端地址

@@ -17,6 +17,7 @@ from app.routers import (
     emparejamiento,
     inventario,
     reporte,
+    rnc,
     roles,
 )
 
@@ -30,12 +31,16 @@ if configuracion.clave_aes256:
 ORIGENES_PERMITIDOS = [
     "http://localhost:5173",
     "http://127.0.0.1:5173",
+    "http://localhost:5174",
+    "http://127.0.0.1:5174",
+    "http://localhost:5175",
+    "http://127.0.0.1:5175",
 ]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=ORIGENES_PERMITIDOS,
-    allow_credentials=True,
+    allow_origins=["*"],
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -48,6 +53,7 @@ app.include_router(emparejamiento.enrutador)
 app.include_router(reporte.enrutador)
 app.include_router(admin.enrutador)
 app.include_router(arco.enrutador)
+app.include_router(rnc.enrutador)
 
 
 @app.get("/")

@@ -1,11 +1,12 @@
 // Página de perfil / 个人资料页 (RF-07 editar, RF-08 desactivar)
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
 
-import { actualizarPerfil, desactivarCuenta } from "../api/autenticacion.js";
+import { actualizarPerfil, desactivarCuenta, obtenerSede } from "../api/autenticacion.js";
 import { useSesion } from "../context/ContextoSesion.jsx";
 import EncabezadoApp from "../componentes/EncabezadoApp.jsx";
+import MapaVista from "../componentes/MapaVista.jsx";
 import PieDePagina from "../componentes/PieDePagina.jsx";
 
 function Perfil() {
@@ -19,6 +20,13 @@ function Perfil() {
   const [mensaje, setMensaje] = useState(null);
   const [error, setError] = useState(null);
   const [guardando, setGuardando] = useState(false);
+  const [sede, setSede] = useState(null);
+
+  useEffect(() => {
+    obtenerSede()
+      .then(setSede)
+      .catch(() => {}); // Si no hay sede, simplemente no se muestra
+  }, []);
 
   if (!usuario) return <Navigate to="/login" replace />;
 
@@ -119,6 +127,38 @@ function Perfil() {
             </div>
           </form>
         </section>
+
+        {/* Ubicación de la sede / 地址位置（点击可查看地图）*/}
+        {sede && sede.latitud != null && (
+          <section className="mt-xl bg-surface-container-lowest rounded-2xl border border-outline-variant/30 p-xl shadow-sm hover-lift-sm">
+            <div className="flex items-center gap-sm mb-lg">
+              <span className="material-symbols-outlined text-primary">map</span>
+              <h2 className="font-headline-md text-headline-md text-on-surface">
+                Ubicación de la sede
+              </h2>
+            </div>
+            {sede.direccion && (
+              <p className="mb-md font-body-md text-body-md text-on-surface flex items-center gap-xs">
+                <span className="material-symbols-outlined text-on-surface-variant text-sm">
+                  apartment
+                </span>
+                {sede.direccion}
+              </p>
+            )}
+            <MapaVista
+              lat={sede.latitud}
+              lng={sede.longitud}
+              direccion={sede.direccion_texto || ""}
+              altura="h-64"
+            />
+            {sede.capacidad_diaria_kg != null && (
+              <p className="mt-sm font-label-sm text-label-sm text-on-surface-variant flex items-center gap-xs">
+                <span className="material-symbols-outlined text-sm">scale</span>
+                Capacidad diaria: {sede.capacidad_diaria_kg} kg
+              </p>
+            )}
+          </section>
+        )}
 
         {/* Derechos ARCO (Ley 172-13) */}
         <section className="mt-xl bg-surface-container-lowest rounded-2xl border border-outline-variant/30 p-xl shadow-sm hover-lift-sm">

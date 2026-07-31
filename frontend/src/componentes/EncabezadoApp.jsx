@@ -18,6 +18,12 @@ const ENLACES = [
 ];
 
 const ENLACE_ADMIN = { a: "/admin", texto: "Admin", icono: "admin_panel_settings" };
+// RNC solo para roles que requieren RNC: receptor, banco, administrador.
+// Donante formalizado: verifica RNC desde el formulario de registro.
+// Donante informal/independiente: NO usa RNC.
+// RNC 仅对需要 RNC 的角色显示
+const ENLACE_RNC = { a: "/consultar-rnc", texto: "RNC", icono: "account_balance" };
+const ROLES_CON_RNC = ["receptor", "banco_alimentos", "administrador"];
 
 function EncabezadoApp() {
   const { usuario, cerrarSesion } = useSesion();
@@ -30,9 +36,19 @@ function EncabezadoApp() {
     obtenerRoles()
       .then((roles) => {
         const rol = roles.find((r) => r.id_rol === usuario.id_rol);
-        if (rol?.nombre === "administrador") {
-          setEnlaces([...ENLACES, ENLACE_ADMIN]);
+        if (!rol) return;
+        const extras = [...ENLACES];
+        // Admin link / 管理员链接
+        if (rol.nombre === "administrador") {
+          extras.push(ENLACE_ADMIN);
         }
+        // RNC link solo para roles que manejan RNC
+        // RNC 链接仅对需要 RNC 的角色显示
+        if (ROLES_CON_RNC.includes(rol.nombre)) {
+          // Insertar antes de Perfil / 插入到 Perfil 之前
+          extras.splice(extras.length - 1, 0, ENLACE_RNC);
+        }
+        setEnlaces(extras);
       })
       .catch(() => {});
   }, [usuario]);
@@ -82,11 +98,6 @@ function EncabezadoApp() {
                 {e.icono}
               </span>
               {e.texto}
-              {({ isActive }) =>
-                isActive && (
-                  <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-5 h-0.5 rounded-full bg-primary" />
-                )
-              }
             </NavLink>
           ))}
         </nav>

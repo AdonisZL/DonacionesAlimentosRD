@@ -3,8 +3,10 @@
 
 import axios from "axios";
 
-// URL base del backend (configurable con VITE_URL_API) / 后端基础地址
-const URL_BASE = import.meta.env.VITE_URL_API || "http://127.0.0.1:8000";
+// URL base del backend. En desarrollo, Vite proxy redirige /api → backend.
+// En producción, se configura con VITE_URL_API.
+// 后端基础地址。开发时 Vite 代理将 /api 转发至后端；生产用 VITE_URL_API 配置。
+const URL_BASE = import.meta.env.VITE_URL_API || "";
 
 export const cliente = axios.create({
   baseURL: URL_BASE,

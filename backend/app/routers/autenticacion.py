@@ -13,6 +13,7 @@ from app.models.usuario import Usuario
 from app.schemas.usuario import (
     DatosLogin,
     RestablecerContrasena,
+    SedeLeer,
     SolicitarRecuperacion,
     Token,
     UsuarioActualizar,
@@ -184,3 +185,29 @@ def desactivar_cuenta(
     """Baja lógica de la cuenta / 账号逻辑注销 (RF-08)."""
     servicio_autenticacion.desactivar_cuenta(sesion, usuario)
     return {"mensaje": "Cuenta desactivada. Tu historial se conserva."}
+
+
+@enrutador.get("/sede", response_model=SedeLeer)
+def obtener_sede(
+    usuario: Usuario = Depends(obtener_usuario_actual),
+    sesion: Session = Depends(obtener_sesion),
+) -> dict:
+    """Obtiene la sede/dirección del usuario autenticado / 获取当前用户的地址场所."""
+    sede = servicio_autenticacion.obtener_sede_usuario(sesion, usuario.id_usuario)
+    if sede is None:
+        return {
+            "id_sede": None,
+            "direccion": None,
+            "direccion_texto": None,
+            "latitud": None,
+            "longitud": None,
+            "capacidad_diaria_kg": None,
+            "tiene_cadena_frio": False,
+            "horario_atencion": None,
+            "estado": None,
+        }
+    # Convertir Decimal a float para JSON / 将 Decimal 转为 float
+    capacidad = sede.get("capacidad_diaria_kg")
+    if capacidad is not None:
+        sede["capacidad_diaria_kg"] = float(capacidad)
+    return sede

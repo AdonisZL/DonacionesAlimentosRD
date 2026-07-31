@@ -18,7 +18,7 @@ class PerfilLegal(Base):
     id_usuario = Column(
         UUID(as_uuid=True), ForeignKey("usuarios.id_usuario"), primary_key=True
     )
-    rnc = Column(String(11), unique=True)
+    rnc = Column(String(255), unique=True)
     telefono = Column(String(20))
     consentimiento_172_13 = Column(Boolean, nullable=False, default=False)
     fecha_consentimiento = Column(DateTime(timezone=True))

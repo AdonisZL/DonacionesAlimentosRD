@@ -24,6 +24,7 @@ class DireccionSede(Base):
         UUID(as_uuid=True), ForeignKey("usuarios.id_usuario"), nullable=False
     )
     nombre_sede = Column(String(150))
+    direccion = Column(String(150))
     direccion_texto = Column(String(255))
     correo_contacto = Column(String(255))
     telefono_contacto = Column(String(20))

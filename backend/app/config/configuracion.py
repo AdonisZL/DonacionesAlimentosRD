@@ -39,6 +39,11 @@ class Configuracion(BaseSettings):
     # AES-256 敏感数据加密密钥
     clave_aes256: str = ""
 
+    # Servicios externos / 外部服务
+    # MegaPlus API para consulta de RNC/Cédula (DGII)
+    # MegaPlus RNC/身份证查询 API（DGII）
+    megaplus_api_url: str = "https://rnc.megaplus.com.do"
+
     @property
     def url_base_datos(self) -> str:
         """Cadena de conexión SQLAlchemy / SQLAlchemy 连接字符串."""

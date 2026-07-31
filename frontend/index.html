@@ -14,6 +14,22 @@
       href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap"
       rel="stylesheet"
     />
+    <!-- Google Maps API: detección de error de autenticación / API认证错误检测 -->
+    <script>
+      window.__googleMapsReady = false;
+      window.__googleMapsError = null;
+      function gm_authFailure() {
+        window.__googleMapsError = "auth_failure";
+        console.warn("Google Maps: error de autenticación. Verifica tu API Key.");
+      }
+    </script>
+    <!-- Google Maps API: Places Autocomplete + Drawing Library / 地图API：地址自动补全 + 绘图库 -->
+    <script
+      src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBjwW7ksuN14-1KLkUsKj48G3jP4_JRMT8&libraries=places"
+      async
+      onload="window.__googleMapsReady=true"
+      onerror="window.__googleMapsError='network_error'"
+    ></script>
     <title>Donaciones de Alimentos RD</title>
   </head>
   <body>

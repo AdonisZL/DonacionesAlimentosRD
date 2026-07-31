@@ -1,11 +1,13 @@
 // Página de registro / 注册页 (RF-01, RF-31) — asistente 2 pasos, solo español
 
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 
 import { obtenerRoles, registrarUsuario } from "../api/autenticacion.js";
+import { consultarRNC } from "../api/rnc.js";
 import { useSesion } from "../context/ContextoSesion.jsx";
 import Marca from "../componentes/Marca.jsx";
+import MapaSelector from "../componentes/MapaSelector.jsx";
 import imagenRegistro from "../../fotos/01.png";
 
 // Roles que pueden auto-registrarse (el administrador no) / 可自助注册的角色
@@ -44,9 +46,13 @@ function validarContrasena(contrasena) {
 }
 
 function Registro() {
+  const location = useLocation();
   const [paso, setPaso] = useState(1);
   const [roles, setRoles] = useState([]);
   const [rolElegido, setRolElegido] = useState("");
+  const [consultandoRNC, setConsultandoRNC] = useState(false);
+  const [rncFeedback, setRncFeedback] = useState(null); // null | 'ok' | 'error'
+  const [rncMensaje, setRncMensaje] = useState("");
   const [formulario, setFormulario] = useState({
     nombre: "",
     apellido: "",
@@ -56,7 +62,8 @@ function Registro() {
     confirmar_contrasena: "",
     id_rol: "",
     subtipo_donante: "",
-    rnc: "",
+    rnc: location.state?.rnc || "",
+    direccion: "",
     direccion_texto: "",
     latitud: "18.4861",
     longitud: "-69.9312",
@@ -123,6 +130,7 @@ function Registro() {
       delete payload.confirmar_contrasena;
       for (const clave of [
         "rnc",
+        "direccion",
         "direccion_texto",
         "capacidad_diaria_kg",
         "horario_atencion",
@@ -345,52 +353,129 @@ function Registro() {
                 rolElegido === "banco_alimentos" ||
                 (rolElegido === "donante" &&
                   formulario.subtipo_donante === "formal")) && (
-                <Campo
-                  id="rnc"
-                  etiqueta="RNC (11 dígitos)"
-                  icono="badge"
-                  valor={formulario.rnc}
-                  onChange={(v) => cambiar("rnc", v)}
-                  ayuda="Registro Nacional de Contribuyentes."
-                />
+                <div className="flex flex-col gap-xs">
+                  <label className="font-label-md text-label-md text-on-surface" htmlFor="rnc">
+                    RNC (11 dígitos)
+                  </label>
+                  <div className="flex gap-sm">
+                    <div className="relative flex-1">
+                      <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">
+                        badge
+                      </span>
+                      <input
+                        id="rnc"
+                        type="text"
+                        value={formulario.rnc}
+                        onChange={(e) => {
+                          cambiar("rnc", e.target.value);
+                          setRncFeedback(null);
+                          setRncMensaje("");
+                        }}
+                        maxLength={11}
+                        className="w-full pl-10 pr-3 py-sm bg-surface border border-outline-variant rounded-lg font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-shadow"
+                        placeholder="Ej: 131996035"
+                      />
+                    </div>
+                    <button
+                      type="button"
+                      disabled={consultandoRNC || formulario.rnc.length < 9}
+                      onClick={async () => {
+                        if (formulario.rnc.length < 9) return;
+                        setConsultandoRNC(true);
+                        setRncFeedback(null);
+                        setRncMensaje("");
+                        try {
+                          const data = await consultarRNC(formulario.rnc);
+                          if (!data.error) {
+                            cambiar("nombre", data.nombre_razon_social || formulario.nombre);
+                            cambiar("apellido", data.nombre_comercial || "");
+                            setRncFeedback("ok");
+                            setRncMensaje(
+                              `✅ RNC verificado: ${data.nombre_razon_social || "Contribuyente"} — Estado: ${data.estado || "N/D"}`,
+                            );
+                          } else {
+                            setRncFeedback("error");
+                            setRncMensaje(data.mensaje || "RNC no encontrado en la DGII.");
+                          }
+                        } catch (err) {
+                          setRncFeedback("error");
+                          const detalle = err.response?.data?.detail;
+                          setRncMensaje(detalle || "RNC no encontrado en la DGII.");
+                        } finally {
+                          setConsultandoRNC(false);
+                        }
+                      }}
+                      className="shrink-0 py-sm px-md rounded-lg bg-primary/10 text-primary font-label-sm hover:bg-primary hover:text-on-primary transition-all disabled:opacity-40 flex items-center gap-xs"
+                    >
+                      <span className="material-symbols-outlined text-sm">
+                        {consultandoRNC ? "hourglass" : "search"}
+                      </span>
+                      {consultandoRNC ? "Verificando…" : "Verificar RNC"}
+                    </button>
+                  </div>
+                  {/* RNC feedback / RNC 验证反馈 */}
+                  {rncFeedback && (
+                    <div
+                      className={`flex items-center gap-xs text-sm px-sm py-xs rounded-lg mt-xs ${
+                        rncFeedback === "ok"
+                          ? "bg-green/10 text-green border border-green/20"
+                          : "bg-error-container text-on-error-container"
+                      }`}
+                    >
+                      <span className="material-symbols-outlined text-sm">
+                        {rncFeedback === "ok" ? "check_circle" : "error"}
+                      </span>
+                      <span>{rncMensaje}</span>
+                    </div>
+                  )}
+                  <small className="font-label-sm text-label-sm text-on-surface-variant">
+                    Registro Nacional de Contribuyentes. Se consulta en la DGII para validar.
+                  </small>
+                </div>
               )}
 
+              {/* Dirección y mapa / 地址与地图 — disponible para todos los roles / 所有角色可用 */}
+              <div className="flex flex-col gap-md border-t border-outline-variant/20 pt-md">
+                <h4 className="font-label-md text-label-md text-on-surface flex items-center gap-xs">
+                  <span className="material-symbols-outlined text-sm">location_on</span>
+                  Ubicación de la sede (opcional)
+                </h4>
+
+                <Campo
+                  id="nombreDireccion"
+                  etiqueta="Nombre de la dirección"
+                  icono="edit_note"
+                  valor={formulario.direccion}
+                  onChange={(v) => cambiar("direccion", v)}
+                  ayuda='Ej: "Sede Central", "Almacén Norte" — texto libre para identificar el lugar.'
+                />
+
+                {/* Mapa interactivo con Places Autocomplete, dibujo de rectángulo y click / 交互地图含自动补全、矩形绘制与点击取点 */}
+                <MapaSelector
+                  latInicial={parseFloat(formulario.latitud) || 18.4861}
+                  lngInicial={parseFloat(formulario.longitud) || -69.9312}
+                  direccionInicial={formulario.direccion_texto}
+                  alCambiarCoordenadas={(lat, lng) => {
+                    cambiar("latitud", lat.toString());
+                    cambiar("longitud", lng.toString());
+                  }}
+                  alCambiarDireccion={(texto) => {
+                    cambiar("direccion_texto", texto);
+                  }}
+                />
+
+              </div>
+              {/* Capacidad diaria — solo receptor y banco / 日处理量 — 仅接收方和食物银行 */}
               {(rolElegido === "receptor" ||
                 rolElegido === "banco_alimentos") && (
-                <>
-                  <Campo
-                    id="direccion"
-                    etiqueta="Dirección de la sede"
-                    icono="location_on"
-                    valor={formulario.direccion_texto}
-                    onChange={(v) => cambiar("direccion_texto", v)}
-                    ayuda="Coordenadas de ejemplo (Santo Domingo); puedes ajustarlas."
-                  />
-                  <div className="grid grid-cols-2 gap-sm">
-                    <Campo
-                      id="latitud"
-                      etiqueta="Latitud"
-                      icono="my_location"
-                      valor={formulario.latitud}
-                      onChange={(v) => cambiar("latitud", v)}
-                    />
-                    <Campo
-                      id="longitud"
-                      etiqueta="Longitud"
-                      icono="my_location"
-                      valor={formulario.longitud}
-                      onChange={(v) => cambiar("longitud", v)}
-                    />
-                  </div>
-                  <Campo
-                    id="capacidad"
-                    etiqueta="Capacidad diaria (kg)"
-                    icono="scale"
-                    tipo="number"
-                    valor={formulario.capacidad_diaria_kg}
-                    onChange={(v) => cambiar("capacidad_diaria_kg", v)}
-                  />
-                </>
+                <Campo
+                  id="capacidad"
+                  etiqueta="Capacidad diaria (kg)"
+                  icono="scale"
+                  tipo="number"
+                  valor={formulario.capacidad_diaria_kg}
+                  onChange={(v) => cambiar("capacidad_diaria_kg", v)}
+                />
               )}
 
               {rolElegido === "banco_alimentos" && (
