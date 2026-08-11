@@ -1,0 +1,47 @@
+TABLA A. VIABILIDAD FINANCIERA BASICA (Seccion 5.1) — Costos, Ahorro Fiscal y Punto de Equilibrio,,,,
+"Nota: Tipo de cambio referencial RD$60.00 = US$1.00 (Elaboracion propia, 2026). Complementa las Tablas de ROI de la seccion 5.1.2.",,,,
+Concepto,Descripcion / Formula,Valor (RD$),Valor (US$),Observaciones
+Costo total de desarrollo (Inversion inicial - Ano 0),Suma de los 9 perfiles tecnicos de recursos humanos,1171200.00,19520.00,Coincide con la Tabla de Presupuesto de Ingenieria (pag. 167)
+Costo operativo anual - piloto (OPEX Ano 1),Egresos operativos con capas gratuitas (Supabase/Render/Vercel),339120.00,5652.00,Costo de infraestructura cercano a cero en el piloto
+Beneficio economico anual,Reduccion de desperdicio y costos logisticos (Kg rescatados x precio promedio),660000.00,11000.00,Ganancia economica documentada (Tabla 63)
+Beneficio operativo anual,Automatizacion de reportes + emparejamiento FEFO + geolocalizacion,120000.00,2000.00,Horas administrativas ahorradas x costo/hora
+Beneficio bruto anual,Beneficio economico + Beneficio operativo,780000.00,13000.00,660000 + 120000
+Ahorro fiscal anual (empresas donantes),"Deduccion del ISR por donacion, Art. 287 Ley No. 11-92 (tasa ISR sociedades 27%)",178200.00,2970.00,660000 x 27% — beneficio para el donante; incentiva la participacion
+Beneficio total anual (con ahorro fiscal del ecosistema),Beneficio bruto anual + Ahorro fiscal anual,958200.00,15970.00,780000 + 178200
+Flujo neto anual (Ano 1),Beneficio bruto anual - OPEX piloto Ano 1,440880.00,7348.00,780000 - 339120
+Punto de equilibrio (simple - beneficio constante),Inversion inicial / Flujo neto anual,2.66 anos,,1171200 / 440880 = 2.66
+Punto de equilibrio (real - flujos crecientes),Ano ult. negativo + (saldo pendiente / flujo siguiente),2.17 anos,,"2 + (132540 / 792525); coincide con el payback del ROI (pag. 170)"
+,,,,
+,,,,
+TABLA B. ESTIMACION DE OPEX POST-PILOTO (Volumen de produccion),,,,
+"Nota: Costos anuales al abandonar las capas gratuitas de Supabase, Render y Vercel y operar a volumen de produccion. Tipo de cambio RD$60.00 = US$1.00.",,,,
+Rubro,Descripcion,Costo mensual (RD$),Costo anual (RD$),Costo anual (US$)
+Hosting backend (produccion),Render plan de pago / VPS (FastAPI - 4GB RAM),4500.00,54000.00,900.00
+Base de datos gestionada,Supabase Pro / PostgreSQL + PostGIS gestionado con respaldos,6000.00,72000.00,1200.00
+Hosting frontend,Vercel Pro (React + Vite - ~US$20/mes),1200.00,14400.00,240.00
+Google Maps API (produccion),Places Autocomplete + Maps JS + Distance Matrix a volumen real,3500.00,42000.00,700.00
+Gemini IA API,Normalizacion semantica + justificacion narrativa,2000.00,24000.00,400.00
+SMTP (correo),SendGrid / AWS SES (verificacion + alertas + notificaciones),1500.00,18000.00,300.00
+Dominio y SSL,Dominio .com.do + certificado SSL,291.67,3500.00,58.33
+CDN y almacenamiento,Cloudflare CDN + almacenamiento de evidencia fotografica,208.33,2500.00,41.67
+Soporte tecnico,"Correccion de bugs, parches de seguridad, monitoreo, rotacion de claves",20000.00,240000.00,4000.00
+Respaldos y recuperacion,pg_dump diario + prueba trimestral de restauracion,2500.00,30000.00,500.00
+TOTAL OPEX POST-PILOTO,Suma de todos los rubros a volumen de produccion,41700.00,500400.00,8340.00
+Diferencia vs OPEX piloto (Ano 1),OPEX post-piloto - OPEX piloto,,161280.00,2688.00
+,,,,
+,,,,
+TABLA C. ANALISIS DE SENSIBILIDAD (Variacion del volumen de donaciones),,,,
+"Nota: Se evalua el impacto sobre la rentabilidad si donan menos empresas o donan cantidades menores. OPEX de produccion fijo = RD$500,400/ano (Tabla B); inversion inicial = RD$1,171,200.",,,,
+Escenario,Supuesto (participacion de donantes),Beneficio bruto anual (RD$),Flujo neto anual = Beneficio - OPEX prod. (RD$),Punto de equilibrio (payback)
+Pesimista (-40%),Caen las donaciones un 40% (menos empresas y lotes menores),468000.00,-32400.00,No recupera la inversion (flujo negativo)
+Conservador (-20%),Caen las donaciones un 20%,624000.00,123600.00,9.48 anos (supera la vida util de 5 anos)
+Base (0%),Nivel de donaciones proyectado,780000.00,279600.00,4.19 anos
+Optimista (+20%),Aumentan las donaciones un 20%,936000.00,435600.00,2.69 anos
+,,,,
+RESUMEN DE SENSIBILIDAD,,,,
+Hallazgo,Descripcion,,,
+Umbral critico,"Con OPEX de produccion, el proyecto deja de ser viable si las donaciones caen ~35% o mas (flujo neto -> 0).",,,
+Punto de equilibrio operativo,Se requiere un beneficio anual minimo de RD$500400 para cubrir el OPEX de produccion.,,,
+Mitigacion 1,Permanecer en capas gratuitas / hibridas mientras el volumen sea bajo posterga el OPEX alto.,,,
+Mitigacion 2,El ahorro fiscal (Art. 287 Ley 11-92) incentiva a mas empresas a donar y mejora todos los escenarios.,,,
+Mitigacion 3,Priorizar donantes de alto volumen (colmados y cadenas) para sostener el beneficio economico.,,,

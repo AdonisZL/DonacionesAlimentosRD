@@ -1,0 +1,11 @@
+Cargo,Cantidad,Semanas,Horas,Pago X Hora (US$),Costo Total (RD$)
+Analista de Sistemas,1,4,160,8.50,81600.00
+Diseñador de Sistemas (UI/UX),1,3,120,5.00,36000.00
+Arquitecto de Soluciones,1,3,120,15.00,108000.00
+Administrador de Base de Datos,1,3,120,10.00,72000.00
+Desarrollador Backend (FastAPI),1,10,400,12.00,288000.00
+Desarrollador Frontend (React),1,10,400,12.00,288000.00
+Ingeniero de Pruebas (QA),1,4,160,8.50,81600.00
+Especialista en Seguridad,1,2,80,15.00,72000.00
+Gestor de Proyecto,1,12,240,10.00,144000.00
+TOTAL,9,51,1800,-,1171200.00

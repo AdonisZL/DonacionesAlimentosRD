@@ -1,0 +1,39 @@
+ANÁLISIS DE RETORNO DE INVERSIÓN — Sistema de Gestión de Donaciones de Alimentos RD,,,,,
+,,,,,
+1. INVERSIÓN Y PERIODO DE IMPLEMENTACIÓN,,,,,
+Concepto,Descripción,Valor (RD$),,,
+Inversión inicial (recursos humanos),Desarrollo completo del sistema (9 perfiles),1171200.00,,,
+Periodo de implementación,Tiempo estimado de desarrollo y puesta en marcha,12 semanas (3 meses),,,
+Vida útil estimada del sistema,Periodo de operación antes de una renovación mayor,5 años,,,
+,,,,,
+2. TIPOS DE GANANCIA (RETORNO),,,,,
+Tipo de ganancia,¿En qué consiste?,Cómo se mide,Beneficio anual estimado (RD$),,
+Ganancia ECONÓMICA (ahorro),Reducción de desperdicio de alimentos y costos logísticos,Kg de alimentos rescatados x precio promedio,660000.00,,
+Ganancia OPERATIVA (eficiencia),Automatización de reportes y emparejamiento FEFO + geolocalización,Horas administrativas ahorradas x costo/hora,120000.00,,
+Ganancia SOCIAL (impacto),Más personas alimentadas y menos inseguridad alimentaria,Nº de raciones distribuidas / beneficiarios,No monetario (impacto),,
+,,,,,
+3. PROYECCIÓN DE RETORNO POR PERIODO,,,,,
+Periodo,Egresos del año (RD$),Beneficios del año (RD$),Flujo neto (RD$),Flujo acumulado (RD$),Estado
+Año 0 (implementación),1171200.00,0.00,-1171200.00,-1171200.00,Inversión
+Año 1,339120.00,780000.00,440880.00,-730320.00,En recuperación
+Año 2,350220.00,948000.00,597780.00,-132540.00,En recuperación
+Año 3,361875.00,1154400.00,792525.00,659985.00,Recuperado
+Año 4,374000.00,1270000.00,896000.00,1555985.00,Ganancia neta
+Año 5,386500.00,1397000.00,1010500.00,2566485.00,Ganancia neta
+,,,,,
+4. FÓRMULAS Y CÁLCULOS,,,,,
+Indicador,Fórmula,Cálculo con los datos,Resultado,,
+Flujo neto anual,Beneficios del año - Egresos del año,780000 - 339120 (Año 1),440880.00,,
+Flujo acumulado,Flujo acumulado anterior + Flujo neto del año,-1171200 + 440880 (Año 1),-730320.00,,
+Beneficios acumulados (5 años),Suma de beneficios Año 1 a Año 5,780000+948000+1154400+1270000+1397000,5549400.00,,
+Egresos acumulados (5 años),Inversión inicial + Suma de egresos Año 1 a Año 5,1171200+339120+350220+361875+374000+386500,2982915.00,,
+Ganancia neta acumulada (5 años),Beneficios acumulados - Egresos acumulados,5549400 - 2982915,2566485.00,,
+ROI (5 años) %,(Ganancia neta acumulada / Inversión inicial) x 100,(2566485 / 1171200) x 100,219.13,,
+Periodo de recuperación (payback),Año del último flujo acumulado negativo + (saldo pendiente / flujo del año siguiente),2 + (132540 / 792525),2.17 años,,
+,,,,,
+5. CONCLUSIÓN DEL ANÁLISIS,,,,,
+Indicador,Resultado,,,,
+Periodo de recuperación (payback),Entre el Año 2 y el Año 3 (aprox. 2.2 años),,,,
+Ganancia neta acumulada a 5 años,RD$ 2566485.00,,,,
+Retorno sobre la inversión (ROI a 5 años),Aprox. 219%,,,,
+Tipo de ganancia principal,Social y económica (ahorro por menos desperdicio + más raciones distribuidas),,,,

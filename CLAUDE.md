@@ -38,6 +38,7 @@
 | Estándares de código / 代码规范 | [docs/es/05-estandares-codigo.md](docs/es/05-estandares-codigo.md) | [docs/zh/05-代码规范.md](docs/zh/05-代码规范.md) |
 | Seguridad / 安全规范 | [docs/es/06-seguridad.md](docs/es/06-seguridad.md) | [docs/zh/06-安全规范.md](docs/zh/06-安全规范.md) |
 | Configuración de entorno / 环境配置 | [docs/es/07-configuracion-entorno.md](docs/es/07-configuracion-entorno.md) | [docs/zh/07-环境配置.md](docs/zh/07-环境配置.md) |
+| Diccionario de datos / 数据字典 | [docs/es/09-diccionario-datos.md](docs/es/09-diccionario-datos.md) | — |
 | Navegación docs / 文档导航 | [docs/README.md](docs/README.md) | (mismo / 同上) |
 | Bitácora / 开发日志 | [bitacora-desarrollo/](bitacora-desarrollo/) | (bilingüe / 双语) |
 
