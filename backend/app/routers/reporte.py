@@ -6,8 +6,10 @@ Donaciones, inventario, asignaciones, exportación a Sheets y reporte fiscal.
 
 import uuid
 from datetime import date
+from decimal import Decimal
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import PlainTextResponse, StreamingResponse
 from sqlalchemy.orm import Session
 
 from app.database.conexion import obtener_sesion
@@ -16,6 +18,7 @@ from app.schemas.reporte import (
     ReporteAsignaciones,
     ReporteDonaciones,
     ReporteLeer,
+    SolicitudCertificado,
     SolicitudExportacion,
     SolicitudFiscal,
 )
@@ -108,3 +111,58 @@ def listar_reportes(
 ):
     """Lista los reportes generados por el usuario / 列出用户生成的报表."""
     return servicio_reportes.listar_reportes(sesion, usuario)
+
+
+@enrutador.post("/lotes/{id_lote}/certificado-pdf")
+def certificado_pdf(
+    id_lote: uuid.UUID,
+    datos: SolicitudCertificado,
+    sesion: Session = Depends(obtener_sesion),
+    usuario: Usuario = Depends(obtener_usuario_actual),
+):
+    """Genera y descarga la certificación fiscal PDF de un lote (Ley 11-92)."""
+    try:
+        pdf_bytes, hash_documento, id_reporte = servicio_reportes.generar_certificado_pdf(
+            sesion,
+            usuario,
+            id_lote,
+            rnc_donante=datos.rnc_donante,
+            valor_total_rd=Decimal(str(datos.valor_total_rd)),
+        )
+    except PermissionError as error:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(error))
+    except ValueError as error:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error))
+
+    return StreamingResponse(
+        iter([pdf_bytes]),
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="certificado_{id_reporte}.pdf"',
+            "X-Hash-Documento": hash_documento,
+        },
+    )
+
+
+@enrutador.get("/dgii-606", response_class=PlainTextResponse)
+def exportar_dgii_606(
+    anio: int,
+    mes: int,
+    sesion: Session = Depends(obtener_sesion),
+    usuario: Usuario = Depends(obtener_usuario_actual),
+):
+    """Exporta los certificados fiscales del mes al formato DGII 606 (.txt)."""
+    try:
+        contenido = servicio_reportes.generar_dgii_606(sesion, usuario, anio, mes)
+    except PermissionError as error:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(error))
+    except ValueError as error:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error))
+
+    return PlainTextResponse(
+        content=contenido,
+        media_type="text/plain",
+        headers={
+            "Content-Disposition": f'attachment; filename="DONACIONES_{anio:04d}_{mes:02d}.txt"'
+        },
+    )

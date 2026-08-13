@@ -48,6 +48,10 @@ class ReporteConsolidado(Base):
     )
     estado = Column(String(20), nullable=False, default="emitido")
     fecha_generacion = Column(DateTime(timezone=True), server_default=func.now())
+    hash_documento = Column(String(128))
+    # Nota: Tabla append-only con trigger, estado='emitido' no se puede modificar
+    #       hash_documento = SHA-256 del PDF generado (RF-27)
+    #       Hallazgo 8: integridad y no-repudio de reportes
 
     __table_args__ = (
         CheckConstraint(

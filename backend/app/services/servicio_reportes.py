@@ -11,6 +11,7 @@ import io
 import json
 import uuid
 from datetime import date, datetime, timezone
+from decimal import Decimal
 
 from sqlalchemy import Date, cast, func, select
 from sqlalchemy.orm import Session
@@ -25,6 +26,8 @@ from app.models.reporte_consolidado import ReporteConsolidado
 from app.models.rol import Rol
 from app.models.usuario import Usuario
 from app.services import servicio_auditoria, servicio_inventario
+from app.services.certificacion_pdf_service import CertificacionFiscalPDF
+from app.services.dgii_606_service import DGII606Exporter
 
 # URL base simulada de Google Sheets / 模拟的表格基础地址
 URL_SHEETS_SIMULADA = "https://docs.google.com/spreadsheets/d/SIMULADO-{id}/edit"
@@ -343,3 +346,136 @@ def listar_reportes(sesion: Session, usuario: Usuario) -> list[ReporteConsolidad
         .scalars()
         .all()
     )
+
+
+# --- Certificación fiscal PDF por lote (Ley 11-92, Art. 287) ---------------
+
+
+def generar_certificado_pdf(
+    sesion: Session,
+    usuario: Usuario,
+    id_lote: uuid.UUID,
+    rnc_donante: str,
+    valor_total_rd: Decimal,
+) -> tuple[bytes, str, uuid.UUID]:
+    """Genera la certificación fiscal PDF de un lote donado (RN-17, Ley 11-92).
+
+    Devuelve (bytes_pdf, hash_sha256, id_reporte). El hash y los datos fiscales
+    quedan guardados en `reportes_consolidados` para alimentar luego el
+    formato de envío DGII 606.
+    生成某批次的税务捐赠证明 PDF，返回 (PDF字节, SHA-256哈希, 报表ID)，
+    并保存以供后续 DGII 606 导出使用。
+    """
+    lote = sesion.get(LoteInventario, id_lote)
+    if lote is None:
+        raise ValueError("El lote indicado no existe.")
+    if not _puede_ver_todo(sesion, usuario) and lote.id_usuario != usuario.id_usuario:
+        raise PermissionError("No tienes permiso para certificar este lote.")
+
+    donante = sesion.get(Usuario, lote.id_usuario)
+    producto = sesion.get(Producto, lote.id_producto)
+    cantidad_kg = Decimal(str(lote.peso_total or lote.cantidad_disponible or 0))
+    if cantidad_kg <= 0:
+        raise ValueError("El lote no tiene cantidad válida para certificar.")
+
+    pdf_gen = CertificacionFiscalPDF()
+    buffer = pdf_gen.crear_certificacion(
+        donante={
+            "razon_social": (
+                f"{donante.nombre} {donante.apellido or ''}".strip()
+                if donante
+                else "Donante"
+            ),
+            "rnc": rnc_donante,
+            "direccion": "N/D",
+            "telefono": donante.telefono if donante else "N/D",
+        },
+        detalles_alimentos=[
+            {
+                "descripcion": producto.nombre_producto if producto else "Alimento donado",
+                "cantidad_kg": cantidad_kg,
+                "valor_unitario_rd": (valor_total_rd / cantidad_kg),
+            }
+        ],
+        fecha_donacion=lote.creado_en or datetime.now(timezone.utc),
+    )
+    pdf_bytes = buffer.getvalue()
+    hash_documento = hashlib.sha256(pdf_bytes).hexdigest()
+    ncf = pdf_gen.generar_ncf()
+
+    reporte = ReporteConsolidado(
+        creado_por=usuario.id_usuario,
+        tipo_reporte="certificado_fiscal",
+        parametros_busqueda={
+            "id_lote": str(id_lote),
+            "rnc_donante": rnc_donante,
+            "valor_total_rd": float(valor_total_rd),
+            "ncf": ncf,
+            "fecha": (lote.creado_en or datetime.now(timezone.utc)).isoformat(),
+        },
+        estado="emitido",
+        hash_documento=hash_documento,
+    )
+    sesion.add(reporte)
+    sesion.flush()
+    reporte.url_archivo = f"certificados/{reporte.id_reporte}.pdf"
+    servicio_auditoria.registrar(
+        sesion,
+        accion="certificado_fiscal_pdf",
+        id_usuario=usuario.id_usuario,
+        entidad="lotes_inventario",
+        id_entidad=id_lote,
+        detalles={"hash_documento": hash_documento, "ncf": ncf},
+        confirmar=False,
+    )
+    sesion.commit()
+
+    return pdf_bytes, hash_documento, reporte.id_reporte
+
+
+# --- RF-27 (extendido): exportación real al formato DGII 606 --------------
+
+
+def generar_dgii_606(
+    sesion: Session, usuario: Usuario, anio: int, mes: int
+) -> str:
+    """Genera el archivo DGII 606 a partir de los certificados fiscales del
+    mes indicado (RNC|TipoID|Código|NCF|Fecha|Monto|...).
+    根据当月已生成的税务证明，导出 DGII 606 格式文件。
+    """
+    if not _puede_ver_todo(sesion, usuario):
+        raise PermissionError(
+            "Solo un banco de alimentos o el administrador puede exportar el formato 606."
+        )
+
+    desde = date(anio, mes, 1)
+    hasta = date(anio + (mes // 12), (mes % 12) + 1, 1)
+
+    consulta = (
+        select(ReporteConsolidado)
+        .where(ReporteConsolidado.tipo_reporte == "certificado_fiscal")
+        .where(cast(ReporteConsolidado.fecha_generacion, Date) >= desde)
+        .where(cast(ReporteConsolidado.fecha_generacion, Date) < hasta)
+        .order_by(ReporteConsolidado.fecha_generacion.asc())
+    )
+
+    donaciones: list[dict] = []
+    for reporte in sesion.execute(consulta).scalars().all():
+        datos = reporte.parametros_busqueda or {}
+        rnc = str(datos.get("rnc_donante", ""))
+        donaciones.append(
+            {
+                "rnc_donante": rnc,
+                "tipo_identificacion": 1 if len(rnc) == 9 else 2,
+                "codigo_concepto": "50",
+                "ncf": datos.get("ncf", ""),
+                "fecha_donacion": datetime.fromisoformat(datos["fecha"])
+                if datos.get("fecha")
+                else reporte.fecha_generacion,
+                "valor_total_rd": Decimal(str(datos.get("valor_total_rd", 0))),
+            }
+        )
+
+    exporter = DGII606Exporter()
+    archivo = exporter.exportar_donaciones(donaciones)
+    return archivo.getvalue()

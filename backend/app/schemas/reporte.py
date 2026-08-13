@@ -67,6 +67,13 @@ class SolicitudFiscal(BaseModel):
     id_reporte_rectificado: uuid.UUID | None = None
 
 
+class SolicitudCertificado(BaseModel):
+    """Solicitud de certificación fiscal PDF de un lote (Ley 11-92)."""
+
+    rnc_donante: str = Field(min_length=9, max_length=11)
+    valor_total_rd: float = Field(gt=0)
+
+
 class ReporteLeer(BaseModel):
     """Reporte consolidado guardado / 已保存的报表."""
 
@@ -78,3 +85,4 @@ class ReporteLeer(BaseModel):
     version: int
     estado: str
     fecha_generacion: datetime | None = None
+    hash_documento: str | None = None

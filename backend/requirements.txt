@@ -18,6 +18,14 @@ GeoAlchemy2>=0.15
 # Cifrado AES-256 (Fase 6, RNF-12) / AES-256 加密
 cryptography>=41.0
 
+# Certificación fiscal PDF (Ley 11-92) / 税务证明 PDF
+reportlab>=4.0
+
+# Integración Google Sheets (OE2, opcional) / 表格集成（可选）
+google-auth>=2.30
+google-auth-httplib2>=0.2
+google-api-python-client>=2.130
+
 # Pruebas (Fase 7) / 测试
 pytest>=8.0
 pytest-cov>=5.0

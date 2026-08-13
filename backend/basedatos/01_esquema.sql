@@ -1,13 +1,41 @@
 -- =====================================================================
 -- 01 — Esquema de la base de datos / 数据库表结构
--- Fuente / 来源: 新建文件夹/Base de datos/能用DonacionesAlimentosRD_PostgreSQL_Fixed.sql
--- 22 tablas + extensiones uuid-ossp y postgis. / 22 张表 + 扩展。
+-- Actualizado / 更新日期: 2026-08-13
+-- Versión mejorada con validación fiscal, cifrado, auditoría inmutable
+-- 22 tablas + extensiones PostGIS avanzadas
 -- =====================================================================
 
+-- Extensiones principales / 主要扩展
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS postgis;
 
-CREATE TABLE "roles" (
+-- Extensiones complementarias para geolocalización y seguridad
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+CREATE EXTENSION IF NOT EXISTS h3;
+CREATE EXTENSION IF NOT EXISTS h3_postgis;
+
+-- =====================================================================
+-- Funciones de control / 控制函数
+-- =====================================================================
+
+-- Función para bloquear modificaciones en tablas append-only
+CREATE OR REPLACE FUNCTION fn_bloquear_modificacion_append_only()
+RETURNS TRIGGER AS $$
+BEGIN
+  RAISE EXCEPTION 'Esta tabla es append-only: operación % no permitida sobre %', TG_OP, TG_TABLE_NAME;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Función para bloquear modificación de reportes emitidos (RN-17)
+CREATE OR REPLACE FUNCTION fn_bloquear_reporte_emitido()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF OLD.estado = 'emitido' THEN
+    RAISE EXCEPTION 'RN-17: un reporte emitido no puede modificarse directamente; genere un reporte rectificativo (id_reporte_rectificado).';
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
   "id_rol" UUID PRIMARY KEY DEFAULT (uuid_generate_v4()),
   "nombre" VARCHAR(50) UNIQUE NOT NULL,
   "descripcion" VARCHAR(255)
@@ -110,8 +138,15 @@ CREATE TABLE "emparejamientos" (
   "estado_tramite" VARCHAR(20) NOT NULL CHECK (estado_tramite IN ('sugerido', 'confirmado', 'rechazado', 'expirado', 'completado')) DEFAULT 'sugerido',
   "fecha_limite_retiro" TIMESTAMPTZ,
   "creado_en" TIMESTAMPTZ NOT NULL DEFAULT (now()),
+  "prioridad_fefo_score" NUMERIC(5,2),
+  "justificacion_ia" TEXT,
+  "aprobado_por_operador" UUID,
   CONSTRAINT "chk_radio_maximo" CHECK (distancia_km <= 75)
 );
+-- Nota: OE3 motor determinista (FEFO + PostGIS + restricciones)
+--       prioridad_fefo_score: peso de ordenamiento por cercanía a vencimiento
+--       justificacion_ia: explicación generada por LLM (OE3)
+--       aprobado_por_operador: RN-07, operador central que aprueba manualmente
 
 CREATE TABLE "ia_ejecuciones" (
   "id_ejecucion" UUID PRIMARY KEY DEFAULT (uuid_generate_v4()),
@@ -148,16 +183,20 @@ CREATE TABLE "evidencia_entrega" (
 
 CREATE TABLE "perfiles_legales" (
   "id_usuario" UUID PRIMARY KEY,
-  "rnc" VARCHAR(255) UNIQUE,
   "telefono" VARCHAR(20),
   "consentimiento_172_13" BOOLEAN NOT NULL DEFAULT false,
-  "fecha_consentimiento" TIMESTAMPTZ
+  "fecha_consentimiento" TIMESTAMPTZ,
+  "rnc_cifrado" BYTEA,
+  "rnc_hash_busqueda" VARCHAR(64) UNIQUE,
+  "cedula_cifrada" BYTEA,
+  "cedula_hash_busqueda" VARCHAR(64) UNIQUE
 );
--- Nota: RNC se cifra con AES-256-GCM (RNF-12), por lo que el valor en BD
---       puede tener hasta 56+ caracteres (base64). La validación de formato
---       se realiza en la capa de aplicación ANTES de cifrar.
--- 注意：RNC 使用 AES-256-GCM 加密，因此数据库中存储的值可长达 56+ 字符（base64）。
---       格式校验在加密前于应用层完成。
+-- Nota: RNC y cédula se cifran con AES-256-GCM (RNF-12), se almacenan como BYTEA
+-- rnc_hash_busqueda y cedula_hash_busqueda son HMAC-SHA256 determinista (blind indexing)
+-- para validar sin exponer los valores en texto claro.
+-- 注意：RNC 和 身份证使用 AES-256-GCM 加密存储为 BYTEA
+-- rnc_hash_busqueda 和 cedula_hash_busqueda 是 HMAC-SHA256 盲索引
+-- 用于验证而无需暴露明文值。
 
 CREATE TABLE "donaciones" (
   "id_donacion" UUID PRIMARY KEY DEFAULT (uuid_generate_v4()),
@@ -174,8 +213,11 @@ CREATE TABLE "detalle_donaciones" (
   "id_producto" INT NOT NULL,
   "cantidad" NUMERIC(10,2) NOT NULL,
   "unidad_medida" VARCHAR(20),
-  "fecha_vencimiento" DATE
+  "fecha_vencimiento" DATE,
+  "valor_estimado_rd" NUMERIC(12,2) DEFAULT 0.00
 );
+-- Nota: Ley 11-92 Incentivo a Donaciones - valoración en RD indispensable para deducibilidad fiscal
+-- 注意：Ley 11-92 捐赠激励 - 多米尼加比索估价对税收可扣除性至关重要
 
 CREATE TABLE "reportes_consolidados" (
   "id_reporte" UUID PRIMARY KEY DEFAULT (uuid_generate_v4()),
@@ -186,8 +228,13 @@ CREATE TABLE "reportes_consolidados" (
   "version" INT NOT NULL DEFAULT 1,
   "id_reporte_rectificado" UUID,
   "estado" VARCHAR(20) NOT NULL CHECK (estado IN ('borrador', 'emitido', 'rectificado')) DEFAULT 'emitido',
-  "fecha_generacion" TIMESTAMPTZ NOT NULL DEFAULT (now())
+  "fecha_generacion" TIMESTAMPTZ NOT NULL DEFAULT (now()),
+  "hash_documento" VARCHAR(128)
 );
+-- Nota: Tabla append-only con trigger, estado='emitido' no se puede modificar
+--       hash_documento = SHA-256 del PDF generado (RF-27), calculado al emitir
+--       Hallazgo 8: integridad y no-repudio de reportes
+-- 注意：仅追加表，estado='emitido' 无法修改，hash_documento 是 PDF 签名
 
 CREATE TABLE "notificaciones" (
   "id_notificacion" UUID PRIMARY KEY DEFAULT (uuid_generate_v4()),
@@ -205,8 +252,14 @@ CREATE TABLE "historial_estado_lote" (
   "estado_anterior" VARCHAR(20),
   "estado_nuevo" VARCHAR(20) NOT NULL,
   "motivo" TEXT,
-  "fecha" TIMESTAMPTZ NOT NULL DEFAULT (now())
+  "fecha" TIMESTAMPTZ NOT NULL DEFAULT (now()),
+  "hash_actual" VARCHAR(128) NOT NULL DEFAULT '',
+  "hash_anterior" VARCHAR(128)
 );
+-- Nota: Tabla append-only, con trigger que bloquea UPDATE/DELETE
+--       hash_actual = SHA-256(id_usuario||id_lote||estado_nuevo||hash_anterior)
+--       Hallazgo 8: cadena de hashes para integridad del historial
+-- 注意：仅追加表，触发器阻止 UPDATE/DELETE，带有哈希链
 
 CREATE TABLE "bitacora_auditoria" (
   "id_bitacora" BIGSERIAL PRIMARY KEY,
@@ -216,8 +269,13 @@ CREATE TABLE "bitacora_auditoria" (
   "id_entidad_afectada" VARCHAR(100),
   "detalles_antes_despues" JSONB,
   "ip_origen" INET,
-  "creado_en" TIMESTAMPTZ NOT NULL DEFAULT (now())
+  "creado_en" TIMESTAMPTZ NOT NULL DEFAULT (now()),
+  "hash_actual" VARCHAR(128) NOT NULL DEFAULT '',
+  "hash_anterior" VARCHAR(128)
 );
+-- Nota: hash_actual = SHA-256(id_usuario||accion||entidad_afectada||detalles_antes_despues||hash_anterior)
+--       Hallazgo 8: cadena de hashes para integridad de auditoría
+-- 注意：hash_actual = SHA-256 链式哈希，hash_anterior 指向前一条记录
 
 CREATE TABLE "consentimiento_datos" (
   "id_consentimiento" UUID PRIMARY KEY DEFAULT (uuid_generate_v4()),
@@ -293,6 +351,28 @@ COMMENT ON TABLE "solicitudes_arco" IS 'RN-19: traza el cumplimiento del plazo d
 COMMENT ON TABLE "retroalimentacion" IS 'RF-22: calificación 1-5 y comentario cualitativo opcional sobre la transacción logística completada.';
 COMMENT ON TABLE "tokens_recuperacion_password" IS 'RF-05: enlaces temporales de restablecimiento de contraseña con expiración estricta de 15 minutos.';
 
+-- =====================================================================
+-- Triggers / 触发器
+-- =====================================================================
+
+-- Trigger: Bloquea modificaciones en bitacora_auditoria (append-only)
+CREATE TRIGGER trg_bitacora_inmutable
+BEFORE DELETE OR UPDATE ON bitacora_auditoria
+FOR EACH ROW
+EXECUTE FUNCTION fn_bloquear_modificacion_append_only();
+
+-- Trigger: Bloquea modificaciones en historial_estado_lote (append-only)
+CREATE TRIGGER trg_historial_lote_inmutable
+BEFORE DELETE OR UPDATE ON historial_estado_lote
+FOR EACH ROW
+EXECUTE FUNCTION fn_bloquear_modificacion_append_only();
+
+-- Trigger: Bloquea modificación de reportes que ya fueron emitidos (RN-17)
+CREATE TRIGGER trg_reporte_inmutable
+BEFORE UPDATE ON reportes_consolidados
+FOR EACH ROW
+EXECUTE FUNCTION fn_bloquear_reporte_emitido();
+
 ALTER TABLE "usuarios" ADD FOREIGN KEY ("id_rol") REFERENCES "roles" ("id_rol") DEFERRABLE INITIALLY IMMEDIATE;
 ALTER TABLE "usuarios" ADD FOREIGN KEY ("id_usuario_registrador") REFERENCES "usuarios" ("id_usuario") DEFERRABLE INITIALLY IMMEDIATE;
 ALTER TABLE "direcciones_sedes" ADD FOREIGN KEY ("id_usuario") REFERENCES "usuarios" ("id_usuario") DEFERRABLE INITIALLY IMMEDIATE;
@@ -305,6 +385,7 @@ ALTER TABLE "mermas" ADD FOREIGN KEY ("id_lote") REFERENCES "lotes_inventario" (
 ALTER TABLE "mermas" ADD FOREIGN KEY ("id_usuario_responsable") REFERENCES "usuarios" ("id_usuario") DEFERRABLE INITIALLY IMMEDIATE;
 ALTER TABLE "emparejamientos" ADD FOREIGN KEY ("id_lote") REFERENCES "lotes_inventario" ("id_lote") DEFERRABLE INITIALLY IMMEDIATE;
 ALTER TABLE "emparejamientos" ADD FOREIGN KEY ("id_sede") REFERENCES "direcciones_sedes" ("id_sede") DEFERRABLE INITIALLY IMMEDIATE;
+ALTER TABLE "emparejamientos" ADD FOREIGN KEY ("aprobado_por_operador") REFERENCES "usuarios" ("id_usuario") DEFERRABLE INITIALLY IMMEDIATE;
 ALTER TABLE "ia_ejecuciones" ADD FOREIGN KEY ("id_emparejamiento") REFERENCES "emparejamientos" ("id_emparejamiento") DEFERRABLE INITIALLY IMMEDIATE;
 ALTER TABLE "entregas_transacciones" ADD FOREIGN KEY ("id_emparejamiento") REFERENCES "emparejamientos" ("id_emparejamiento") DEFERRABLE INITIALLY IMMEDIATE;
 ALTER TABLE "evidencia_entrega" ADD FOREIGN KEY ("id_entrega") REFERENCES "entregas_transacciones" ("id_entrega") DEFERRABLE INITIALLY IMMEDIATE;

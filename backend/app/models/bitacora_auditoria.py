@@ -24,3 +24,7 @@ class BitacoraAuditoria(Base):
     detalles_antes_despues = Column(JSONB)
     ip_origen = Column(INET)
     creado_en = Column(DateTime(timezone=True), server_default=func.now())
+    hash_actual = Column(String(128), nullable=False, default="")
+    hash_anterior = Column(String(128))
+    # Nota: hash_actual = SHA-256(id_usuario||accion||entidad_afectada||detalles_antes_despues||hash_anterior)
+    #       Hallazgo 8: cadena de hashes para integridad de auditoría

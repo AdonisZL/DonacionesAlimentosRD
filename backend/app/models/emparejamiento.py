@@ -47,6 +47,12 @@ class Emparejamiento(Base):
     estado_tramite = Column(String(20), nullable=False, default="sugerido")
     fecha_limite_retiro = Column(DateTime(timezone=True))
     creado_en = Column(DateTime(timezone=True), server_default=func.now())
+    # Nuevos campos para OE3 (motor determinista)
+    prioridad_fefo_score = Column(Numeric(5, 2))  # OE2/OE3: peso de ordenamiento por vencimiento
+    justificacion_ia = Column(String)  # OE3: explicación generada por LLM
+    aprobado_por_operador = Column(
+        UUID(as_uuid=True), ForeignKey("usuarios.id_usuario")
+    )  # RN-07: operador que aprueba manualmente
 
     __table_args__ = (
         CheckConstraint(

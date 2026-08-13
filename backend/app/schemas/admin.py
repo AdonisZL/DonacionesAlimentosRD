@@ -38,3 +38,5 @@ class AuditoriaLeer(BaseModel):
     id_entidad_afectada: str | None = None
     ip_origen: str | None = None
     creado_en: datetime | None = None
+    hash_actual: str | None = None
+    hash_anterior: str | None = None

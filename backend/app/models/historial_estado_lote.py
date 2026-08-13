@@ -27,3 +27,8 @@ class HistorialEstadoLote(Base):
     estado_nuevo = Column(String(20), nullable=False)
     motivo = Column(Text)
     fecha = Column(DateTime(timezone=True), server_default=func.now())
+    hash_actual = Column(String(128), nullable=False, default="")
+    hash_anterior = Column(String(128))
+    # Nota: Tabla append-only con trigger que bloquea UPDATE/DELETE
+    #       hash_actual = SHA-256(id_usuario||id_lote||estado_nuevo||hash_anterior)
+    #       Hallazgo 8: cadena de hashes para integridad del historial

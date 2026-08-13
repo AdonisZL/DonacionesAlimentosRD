@@ -25,6 +25,7 @@ class CandidatoEmparejamiento(BaseModel):
     compatible: bool = True
     motivo_incompatible: str | None = None
     justificacion_ia: str | None = None
+    score_fefo: float | None = None
 
 
 class BuscarCandidatos(BaseModel):
@@ -59,6 +60,8 @@ class EmparejamientoLeer(BaseModel):
     nombre_producto: str | None = None
     nombre_sede: str | None = None
     justificacion_ia: str | None = None
+    prioridad_fefo_score: float | None = None
+    aprobado_por_operador: uuid.UUID | None = None
 
 
 class RetroalimentacionCrear(BaseModel):

@@ -7,7 +7,8 @@ notificaciones y retroalimentación.
 """
 
 import uuid
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
+from decimal import Decimal
 
 from sqlalchemy import func, select
 from sqlalchemy.orm import Session
@@ -27,6 +28,7 @@ from app.models.rol import Rol
 from app.models.usuario import Usuario
 from app.schemas.emparejamiento import RetroalimentacionCrear
 from app.services import servicio_ia
+from app.services.fefo_scoring_service import FEFOScoringEngine
 from app.services.servicio_mapas import calcular_tiempo_viaje
 
 # RN-12: retiro máximo 48 horas tras confirmar / 确认后最长 48 小时取货
@@ -156,6 +158,15 @@ def buscar_candidatos(
         except Exception:
             mapa = {"distancia_google_km": None, "tiempo_estimado_min": None}
 
+        score_fefo = FEFOScoringEngine.calcular_score_final(
+            dias_para_vencer=_dias_para_vencer(lote.fecha_vencimiento),
+            distancia_km=dist_km,
+            cantidad_kg=Decimal(str(peso or 0)),
+            capacidad_disponible_kg=Decimal(str(cap or 0)),
+            es_perecedero=requiere_frio,
+            tiene_cadena_frio_requerida=requiere_frio,
+        )["score_final"]
+
         candidatos.append(
             {
                 "id_sede": sede.id_sede,
@@ -170,9 +181,19 @@ def buscar_candidatos(
                 "compatible": compatible,
                 "motivo_incompatible": motivo,
                 "justificacion_ia": ia["respuesta"],
+                "score_fefo": score_fefo,
             }
         )
+    # OE3: priorizar primero por compatibilidad y luego por score FEFO (mayor a menor)
+    candidatos.sort(key=lambda c: (not c["compatible"], -c["score_fefo"]))
     return candidatos
+
+
+def _dias_para_vencer(fecha_vencimiento) -> int:
+    """Días restantes hasta el vencimiento del lote / 距批次到期的天数."""
+    if fecha_vencimiento is None:
+        return 30
+    return (fecha_vencimiento - date.today()).days
 
 
 def crear_emparejamiento(
@@ -222,6 +243,21 @@ def crear_emparejamiento(
     )
     sesion.add(emparejamiento)
     sesion.flush()
+
+    # OE3: puntaje FEFO determinista (vencimiento + distancia + capacidad)
+    peso = float(lote.peso_total) if lote.peso_total is not None else None
+    cap = (
+        float(sede.capacidad_diaria_kg) if sede.capacidad_diaria_kg is not None else None
+    )
+    scores = FEFOScoringEngine.calcular_score_final(
+        dias_para_vencer=_dias_para_vencer(lote.fecha_vencimiento),
+        distancia_km=dist_km,
+        cantidad_kg=Decimal(str(peso or 0)),
+        capacidad_disponible_kg=Decimal(str(cap or 0)),
+        es_perecedero=requiere_frio,
+        tiene_cadena_frio_requerida=requiere_frio,
+    )
+    emparejamiento.prioridad_fefo_score = Decimal(str(scores["score_final"]))
 
     # RF-18: registrar la justificación de la IA (simulada) / 记录模拟 AI 说明
     producto = sesion.get(Producto, lote.id_producto)
@@ -285,6 +321,9 @@ def _enriquecer(sesion: Session, emp: Emparejamiento) -> dict:
         "nombre_producto": producto.nombre_producto if producto else None,
         "nombre_sede": sede.nombre_sede if sede else None,
         "justificacion_ia": _justificacion_de(sesion, emp.id_emparejamiento),
+        "prioridad_fefo_score": (
+            float(emp.prioridad_fefo_score) if emp.prioridad_fefo_score is not None else None
+        ),
     }
 
 

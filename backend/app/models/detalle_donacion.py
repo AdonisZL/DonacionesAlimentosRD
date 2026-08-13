@@ -34,3 +34,6 @@ class DetalleDonacion(Base):
     cantidad = Column(Numeric(10, 2), nullable=False)
     unidad_medida = Column(String(20))
     fecha_vencimiento = Column(Date)
+    valor_estimado_rd = Column(Numeric(12, 2), default=0.00)
+    # Nota: Ley 11-92 Incentivo a Donaciones - valoración en RD
+    #       indispensable para deducibilidad fiscal

@@ -84,9 +84,20 @@ def auditoria(
             id_entidad_afectada=e.id_entidad_afectada,
             ip_origen=str(e.ip_origen) if e.ip_origen is not None else None,
             creado_en=e.creado_en,
+            hash_actual=e.hash_actual,
+            hash_anterior=e.hash_anterior,
         )
         for e in eventos
     ]
+
+
+@enrutador.get("/auditoria/integridad")
+def integridad_auditoria(
+    sesion: Session = Depends(obtener_sesion),
+    _admin: Usuario = Depends(solo_admin),
+):
+    """Valida la cadena de hashes de la bitácora (Hallazgo 8) / 校验审计哈希链."""
+    return servicio_auditoria.validar_integridad(sesion)
 
 
 def _fila_usuario(sesion: Session, usuario: Usuario) -> dict:
