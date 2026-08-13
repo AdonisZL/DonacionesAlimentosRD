@@ -61,7 +61,7 @@ def enviar_alertas_vencimiento(sesion: Session) -> dict:
     """
     lotes = _lotes_por_vencer(sesion)
     if not lotes:
-        return {"alertas_enviadas": 0, "lotes_alertados": []}
+        return {"alertas_enviadas": 0, "lotes_alertados": [], "total_lotes": 0}
 
     # Agrupar por donante / 按捐赠者分组
     por_donante: dict[str, list[dict]] = {}

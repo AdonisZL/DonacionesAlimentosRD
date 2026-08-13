@@ -12,8 +12,13 @@ from sqlalchemy.orm import Session
 
 from app.database.conexion import obtener_sesion
 from app.models.usuario import Usuario
-from app.schemas.admin import AuditoriaLeer, CambiarEstado, UsuarioAdmin
-from app.services import servicio_admin, servicio_auditoria
+from app.schemas.admin import (
+    AuditoriaLeer,
+    CambiarEstado,
+    ResumenAlertasEnviadas,
+    UsuarioAdmin,
+)
+from app.services import servicio_admin, servicio_alertas, servicio_auditoria
 from app.utils.dependencias import requerir_roles
 
 enrutador = APIRouter(prefix="/api/admin", tags=["administracion"])
@@ -87,6 +92,33 @@ def auditoria(
         )
         for e in eventos
     ]
+
+
+@enrutador.post("/alertas-vencimiento/enviar", response_model=ResumenAlertasEnviadas)
+def enviar_alertas_vencimiento(
+    request: Request,
+    sesion: Session = Depends(obtener_sesion),
+    admin: Usuario = Depends(solo_admin),
+):
+    """Envía por correo las alertas de vencimiento (RF-13) / 发送临期预警邮件.
+
+    Disparo manual para demostración y pruebas; en producción puede
+    programarse diariamente con un planificador externo.
+    手动触发用于演示与测试；生产环境可用外部计划任务每日执行。
+    """
+    from app.config.configuracion import configuracion
+
+    resumen = servicio_alertas.enviar_alertas_vencimiento(sesion)
+    resumen["correo_real"] = configuracion.correo_activo
+    servicio_auditoria.registrar(
+        sesion,
+        accion="enviar_alertas_vencimiento",
+        id_usuario=admin.id_usuario,
+        entidad="lote_inventario",
+        detalles={"alertas_enviadas": resumen["alertas_enviadas"]},
+        ip_origen=(request.client.host if request.client else None),
+    )
+    return resumen
 
 
 def _fila_usuario(sesion: Session, usuario: Usuario) -> dict:

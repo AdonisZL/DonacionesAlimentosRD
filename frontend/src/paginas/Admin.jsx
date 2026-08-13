@@ -5,6 +5,7 @@ import { Navigate } from "react-router-dom";
 
 import {
   cambiarEstadoUsuario,
+  enviarAlertasVencimiento,
   obtenerAuditoria,
   obtenerPanelAdmin,
   obtenerUsuariosAdmin,
@@ -66,6 +67,25 @@ function Admin() {
       await cargar();
     } catch (err) {
       setError(err?.response?.data?.detail || "No se pudo cambiar el estado.");
+    }
+  }
+
+  async function enviarAlertas() {
+    setError(null);
+    setMensaje(null);
+    try {
+      const resumen = await enviarAlertasVencimiento();
+      const modo = resumen.correo_real ? "correo real (SMTP)" : "modo simulado (consola)";
+      if (resumen.alertas_enviadas === 0) {
+        setMensaje(`No hay lotes próximos a vencer.`);
+      } else {
+        setMensaje(
+          `${resumen.alertas_enviadas} correo(s) enviado(s) por ${modo} para ${resumen.total_lotes} lote(s).`
+        );
+      }
+      await cargar();
+    } catch (err) {
+      setError(err?.response?.data?.detail || "No se pudieron enviar las alertas.");
     }
   }
 
@@ -140,6 +160,26 @@ function Admin() {
             </div>
           </>
         )}
+
+        {/* Alertas de vencimiento (RF-13) */}
+        <section className="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 p-xl flex flex-col sm:flex-row sm:items-center gap-md">
+          <div className="flex-1">
+            <h2 className="font-headline-md text-headline-md text-on-surface">
+              Alertas de vencimiento
+            </h2>
+            <p className="font-body-md text-body-md text-on-surface-variant">
+              Envía por correo las alertas de lotes que vencen en ≤ 3 días. Sin SMTP configurado se imprime en la consola del backend.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={enviarAlertas}
+            className="shrink-0 flex items-center gap-sm rounded-full bg-secondary text-on-secondary px-lg py-sm font-label-md text-label-md hover:opacity-90 active:scale-95 transition"
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: "20px" }}>send</span>
+            Enviar alertas
+          </button>
+        </section>
 
         {/* Usuarios (RF-28) */}
         <section className="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 p-xl">

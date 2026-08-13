@@ -38,3 +38,12 @@ class AuditoriaLeer(BaseModel):
     id_entidad_afectada: str | None = None
     ip_origen: str | None = None
     creado_en: datetime | None = None
+
+
+class ResumenAlertasEnviadas(BaseModel):
+    """Resumen del envío de alertas de vencimiento (RF-13) / 临期预警发送摘要."""
+
+    alertas_enviadas: int
+    lotes_alertados: list[str]
+    total_lotes: int
+    correo_real: bool = False

@@ -27,3 +27,9 @@ export async function obtenerAuditoria() {
   const { data } = await cliente.get("/api/admin/auditoria");
   return data;
 }
+
+// Enviar alertas de vencimiento por correo / 发送临期预警邮件 (RF-13)
+export async function enviarAlertasVencimiento() {
+  const { data } = await cliente.post("/api/admin/alertas-vencimiento/enviar");
+  return data;
+}
