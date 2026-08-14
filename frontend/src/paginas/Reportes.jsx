@@ -301,7 +301,7 @@ function Reportes() {
             ) : (
               <>
                 <p className="font-body-md text-body-md text-on-surface-variant">
-                  Genera un reporte fiscal mensual inmutable (Norma DGII 06-2018),
+                  Genera un reporte fiscal mensual inmutable (Norma DGII 04-2014),
                   encadenado por hash para garantizar su integridad.
                 </p>
                 <form className="grid grid-cols-1 sm:grid-cols-3 gap-md items-end" onSubmit={generarFiscal}>
