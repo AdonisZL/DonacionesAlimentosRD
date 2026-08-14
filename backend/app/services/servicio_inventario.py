@@ -113,6 +113,15 @@ def registrar_lote(
             "El lote está vencido o vence hoy; no se puede registrar (RF-14)."
         )
 
+    # RN-05: ventana mínima obligatoria antes de caducidad, según categoría.
+    perecibilidad = sesion.get(CategoriaPerecibilidad, producto.id_perecibilidad)
+    if perecibilidad is not None and ventana < perecibilidad.dias_minimos_ventana:
+        raise ValueError(
+            f"El lote no cumple la ventana mínima de donación para su categoría "
+            f"({perecibilidad.nombre}: {perecibilidad.dias_minimos_ventana} días "
+            f"mínimos; ventana actual: {ventana} días) (RN-05)."
+        )
+
     lote = LoteInventario(
         id_usuario=usuario.id_usuario,
         id_producto=datos.id_producto,

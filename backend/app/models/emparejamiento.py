@@ -60,5 +60,6 @@ class Emparejamiento(Base):
             "'expirado', 'completado')",
             name="chk_estado_tramite",
         ),
-        CheckConstraint("distancia_km <= 75", name="chk_radio_maximo"),
+        # RN-10: radio máximo del piloto de Santo Domingo Oeste.
+        CheckConstraint("distancia_km <= 15", name="chk_radio_maximo"),
     )

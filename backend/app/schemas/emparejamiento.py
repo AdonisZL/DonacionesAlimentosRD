@@ -29,10 +29,13 @@ class CandidatoEmparejamiento(BaseModel):
 
 
 class BuscarCandidatos(BaseModel):
-    """Parámetros de búsqueda de receptores / 搜索参数 (RF-17)."""
+    """Parámetros de búsqueda de receptores / 搜索参数 (RF-17).
+
+    RN-10: radio inicial de 10 km, máximo 15 km para el piloto de SDO.
+    """
 
     id_lote: uuid.UUID
-    radio_km: float = Field(default=25, gt=0, le=75)
+    radio_km: float = Field(default=10, gt=0, le=15)
 
 
 class EmparejamientoCrear(BaseModel):
@@ -40,7 +43,7 @@ class EmparejamientoCrear(BaseModel):
 
     id_lote: uuid.UUID
     id_sede: uuid.UUID
-    radio_km: float = Field(default=25, gt=0, le=75)
+    radio_km: float = Field(default=10, gt=0, le=15)
 
 
 class EmparejamientoLeer(BaseModel):
@@ -69,6 +72,12 @@ class RetroalimentacionCrear(BaseModel):
 
     calificacion: int = Field(ge=1, le=5)
     comentario: str | None = None
+
+
+class CompletarEntrega(BaseModel):
+    """Datos para completar un emparejamiento / 完成匹配的数据 (RN-14)."""
+
+    archivo_evidencia_url: str = Field(min_length=1, max_length=255)
 
 
 class NotificacionLeer(BaseModel):

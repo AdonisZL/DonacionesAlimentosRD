@@ -141,7 +141,8 @@ CREATE TABLE "emparejamientos" (
   "prioridad_fefo_score" NUMERIC(5,2),
   "justificacion_ia" TEXT,
   "aprobado_por_operador" UUID,
-  CONSTRAINT "chk_radio_maximo" CHECK (distancia_km <= 75)
+  -- RN-10: radio máximo del piloto de Santo Domingo Oeste.
+  CONSTRAINT "chk_radio_maximo" CHECK (distancia_km <= 15)
 );
 -- Nota: OE3 motor determinista (FEFO + PostGIS + restricciones)
 --       prioridad_fefo_score: peso de ordenamiento por cercanía a vencimiento

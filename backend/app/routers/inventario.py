@@ -22,7 +22,7 @@ from app.schemas.inventario import (
     ProductoLeer,
 )
 from app.services import servicio_inventario
-from app.utils.dependencias import obtener_usuario_actual
+from app.utils.dependencias import obtener_usuario_actual, requerir_verificado
 
 enrutador = APIRouter(prefix="/api/inventario", tags=["inventario"])
 
@@ -66,7 +66,7 @@ def crear_producto(
 def registrar_lote(
     datos: LoteCrear,
     sesion: Session = Depends(obtener_sesion),
-    usuario: Usuario = Depends(obtener_usuario_actual),
+    usuario: Usuario = Depends(requerir_verificado),
 ):
     """Registra un lote de inventario / 登记库存批次 (RF-09, RF-14)."""
     try:
@@ -113,7 +113,7 @@ def ajustar_inventario(
     id_lote: uuid.UUID,
     datos: AjusteInventario,
     sesion: Session = Depends(obtener_sesion),
-    usuario: Usuario = Depends(obtener_usuario_actual),
+    usuario: Usuario = Depends(requerir_verificado),
 ):
     """Ajuste manual de inventario (solo banco) / 手动调整（仅食物银行）(RF-15)."""
     try:

@@ -150,6 +150,14 @@ FROM information_schema.key_column_usage
 WHERE constraint_name LIKE '%aprobado_por%';
 
 -- =====================================================================
+-- 8. RN-10: RADIO MÁXIMO DEL PILOTO SDO (10 km inicial / 15 km máximo)
+-- =====================================================================
+
+ALTER TABLE "emparejamientos" DROP CONSTRAINT IF EXISTS "chk_radio_maximo";
+ALTER TABLE "emparejamientos"
+ADD CONSTRAINT "chk_radio_maximo" CHECK (distancia_km <= 15);
+
+-- =====================================================================
 -- COMMIT TRANSACTION
 -- =====================================================================
 

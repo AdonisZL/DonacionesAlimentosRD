@@ -19,6 +19,7 @@ from app.models.categoria_alimento import CategoriaAlimento
 from app.models.direccion_sede import DireccionSede
 from app.models.emparejamiento import Emparejamiento
 from app.models.entrega_transaccion import EntregaTransaccion
+from app.models.evidencia_entrega import EvidenciaEntrega
 from app.models.ia_ejecucion import IaEjecucion
 from app.models.lote_inventario import LoteInventario
 from app.models.notificacion import Notificacion
@@ -33,6 +34,9 @@ from app.services.servicio_mapas import calcular_tiempo_viaje
 
 # RN-12: retiro máximo 48 horas tras confirmar / 确认后最长 48 小时取货
 HORAS_LIMITE_RETIRO = 48
+
+# RN-10: radio geoespacial máximo permitido (piloto Santo Domingo Oeste)
+RADIO_MAXIMO_KM = 15
 
 
 def _requiere_cadena_frio(sesion: Session, id_producto: int) -> bool:
@@ -225,6 +229,17 @@ def crear_emparejamiento(
             "El lote requiere cadena de frío y la sede seleccionada no la tiene (RN-07)."
         )
 
+    # RN-11: el peso del lote no puede exceder la capacidad diaria del receptor.
+    peso_lote = float(lote.peso_total) if lote.peso_total is not None else None
+    capacidad_sede = (
+        float(sede.capacidad_diaria_kg) if sede.capacidad_diaria_kg is not None else None
+    )
+    if peso_lote is not None and capacidad_sede is not None and peso_lote > capacidad_sede:
+        raise ValueError(
+            "El peso del lote excede la capacidad de almacenamiento diaria "
+            "declarada por la sede receptora (RN-11)."
+        )
+
     # Distancia real con PostGIS / 用 PostGIS 计算实际距离
     dist_m = sesion.execute(
         select(
@@ -232,8 +247,11 @@ def crear_emparejamiento(
         ).where(DireccionSede.id_sede == id_sede)
     ).scalar_one()
     dist_km = round(float(dist_m) / 1000.0, 2)
-    if dist_km > 75:
-        raise ValueError("La sede está fuera del radio máximo permitido (75 km).")
+    if dist_km > RADIO_MAXIMO_KM:
+        raise ValueError(
+            f"La sede está fuera del radio máximo permitido "
+            f"({RADIO_MAXIMO_KM:.0f} km) (RN-10)."
+        )
 
     emparejamiento = Emparejamiento(
         id_lote=id_lote,
@@ -245,10 +263,8 @@ def crear_emparejamiento(
     sesion.flush()
 
     # OE3: puntaje FEFO determinista (vencimiento + distancia + capacidad)
-    peso = float(lote.peso_total) if lote.peso_total is not None else None
-    cap = (
-        float(sede.capacidad_diaria_kg) if sede.capacidad_diaria_kg is not None else None
-    )
+    peso = peso_lote
+    cap = capacidad_sede
     scores = FEFOScoringEngine.calcular_score_final(
         dias_para_vencer=_dias_para_vencer(lote.fecha_vencimiento),
         distancia_km=dist_km,
@@ -329,6 +345,7 @@ def _enriquecer(sesion: Session, emp: Emparejamiento) -> dict:
 
 def listar_emparejamientos(sesion: Session, usuario: Usuario) -> list[dict]:
     """Lista los matches del usuario (como donante o receptor) / 列出用户的匹配."""
+    liberar_vencidos(sesion)  # RN-12: liberar antes de mostrar el listado
     # Matches de mis lotes / 我的批次的匹配
     consulta = (
         select(Emparejamiento)
@@ -425,9 +442,22 @@ def rechazar_emparejamiento(
 
 
 def completar_emparejamiento(
-    sesion: Session, usuario: Usuario, id_emparejamiento: uuid.UUID
+    sesion: Session,
+    usuario: Usuario,
+    id_emparejamiento: uuid.UUID,
+    archivo_evidencia_url: str,
 ) -> EntregaTransaccion:
-    """Marca el match como completado y crea la entrega / 完成匹配并创建交付."""
+    """Marca el match como completado y crea la entrega / 完成匹配并创建交付.
+
+    RN-14: exige evidencia fotográfica de la recepción física antes de
+    registrar la donación como completada.
+    """
+    if not archivo_evidencia_url or not archivo_evidencia_url.strip():
+        raise ValueError(
+            "Se requiere la evidencia fotográfica de la entrega para "
+            "completar el emparejamiento (RN-14)."
+        )
+
     emp = sesion.get(Emparejamiento, id_emparejamiento)
     if emp is None:
         raise ValueError("El emparejamiento no existe.")
@@ -447,9 +477,54 @@ def completar_emparejamiento(
         fecha_completado=datetime.now(timezone.utc),
     )
     sesion.add(entrega)
+    sesion.flush()
+
+    # RN-14: registrar la evidencia fotográfica obligatoria.
+    sesion.add(
+        EvidenciaEntrega(
+            id_entrega=entrega.id_entrega,
+            tipo_archivo="imagen",
+            archivo_url=archivo_evidencia_url,
+        )
+    )
     sesion.commit()
     sesion.refresh(entrega)
     return entrega
+
+
+def liberar_vencidos(sesion: Session) -> int:
+    """Libera automáticamente los lotes cuyo plazo de retiro expiró (RN-12).
+
+    Marca como 'expirado' los emparejamientos confirmados cuya
+    fecha_limite_retiro ya pasó y devuelve el lote al pool disponible.
+    """
+    ahora = datetime.now(timezone.utc)
+    vencidos = (
+        sesion.execute(
+            select(Emparejamiento).where(
+                Emparejamiento.estado_tramite == "confirmado",
+                Emparejamiento.fecha_limite_retiro.is_not(None),
+                Emparejamiento.fecha_limite_retiro < ahora,
+            )
+        )
+        .scalars()
+        .all()
+    )
+    for emp in vencidos:
+        lote = sesion.get(LoteInventario, emp.id_lote)
+        emp.estado_tramite = "expirado"
+        if lote is not None and lote.estado in ("reservado", "asignado"):
+            lote.estado = "disponible"
+            _crear_notificacion(
+                sesion,
+                lote.id_usuario,
+                "Plazo de retiro vencido",
+                "El receptor no retiró el lote a tiempo (48h); "
+                "está disponible de nuevo (RN-12).",
+            )
+    if vencidos:
+        sesion.commit()
+    return len(vencidos)
 
 
 def crear_retroalimentacion(

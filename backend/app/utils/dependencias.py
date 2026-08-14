@@ -67,3 +67,22 @@ def requerir_roles(*nombres_rol: str):
         return usuario
 
     return verificar
+
+
+def requerir_verificado(
+    usuario: Usuario = Depends(obtener_usuario_actual),
+) -> Usuario:
+    """Exige correo verificado antes de operar / 要求邮箱已验证 (RF-06).
+
+    Bloquea declaraciones de inventario, emparejamientos o solicitudes
+    logísticas hasta que el usuario confirme su cuenta por correo.
+    """
+    if not usuario.email_verificado:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=(
+                "Debes verificar tu correo electrónico antes de realizar "
+                "esta acción (RF-06)."
+            ),
+        )
+    return usuario

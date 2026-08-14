@@ -15,13 +15,14 @@ from app.models.usuario import Usuario
 from app.schemas.emparejamiento import (
     BuscarCandidatos,
     CandidatoEmparejamiento,
+    CompletarEntrega,
     EmparejamientoCrear,
     EmparejamientoLeer,
     NotificacionLeer,
     RetroalimentacionCrear,
 )
 from app.services import servicio_emparejamiento
-from app.utils.dependencias import obtener_usuario_actual
+from app.utils.dependencias import obtener_usuario_actual, requerir_verificado
 
 enrutador = APIRouter(prefix="/api/emparejamientos", tags=["emparejamientos"])
 
@@ -30,7 +31,7 @@ enrutador = APIRouter(prefix="/api/emparejamientos", tags=["emparejamientos"])
 def buscar_candidatos(
     datos: BuscarCandidatos,
     sesion: Session = Depends(obtener_sesion),
-    usuario: Usuario = Depends(obtener_usuario_actual),
+    usuario: Usuario = Depends(requerir_verificado),
 ):
     """Busca receptores compatibles por cercanía (RF-17/18) / 搜索附近兼容接收方."""
     try:
@@ -49,7 +50,7 @@ def buscar_candidatos(
 def crear_emparejamiento(
     datos: EmparejamientoCrear,
     sesion: Session = Depends(obtener_sesion),
-    usuario: Usuario = Depends(obtener_usuario_actual),
+    usuario: Usuario = Depends(requerir_verificado),
 ):
     """Crea un emparejamiento sugerido con justificación de IA / 创建建议匹配."""
     try:
@@ -76,7 +77,7 @@ def listar_emparejamientos(
 def confirmar_emparejamiento(
     id_emparejamiento: uuid.UUID,
     sesion: Session = Depends(obtener_sesion),
-    usuario: Usuario = Depends(obtener_usuario_actual),
+    usuario: Usuario = Depends(requerir_verificado),
 ):
     """Confirma el emparejamiento y notifica (RF-19/21) / 确认匹配并通知."""
     try:
@@ -94,7 +95,7 @@ def confirmar_emparejamiento(
 def rechazar_emparejamiento(
     id_emparejamiento: uuid.UUID,
     sesion: Session = Depends(obtener_sesion),
-    usuario: Usuario = Depends(obtener_usuario_actual),
+    usuario: Usuario = Depends(requerir_verificado),
 ):
     """Rechaza el emparejamiento y libera el lote (RF-20) / 拒绝并释放批次."""
     try:
@@ -111,13 +112,17 @@ def rechazar_emparejamiento(
 @enrutador.post("/{id_emparejamiento}/completar", status_code=status.HTTP_201_CREATED)
 def completar_emparejamiento(
     id_emparejamiento: uuid.UUID,
+    datos: CompletarEntrega,
     sesion: Session = Depends(obtener_sesion),
-    usuario: Usuario = Depends(obtener_usuario_actual),
+    usuario: Usuario = Depends(requerir_verificado),
 ):
-    """Completa el emparejamiento y crea la entrega / 完成匹配并创建交付."""
+    """Completa el emparejamiento y crea la entrega / 完成匹配并创建交付.
+
+    RN-14: requiere la URL de la evidencia fotográfica de la entrega.
+    """
     try:
         entrega = servicio_emparejamiento.completar_emparejamiento(
-            sesion, usuario, id_emparejamiento
+            sesion, usuario, id_emparejamiento, datos.archivo_evidencia_url
         )
     except PermissionError as error:
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(error))

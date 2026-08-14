@@ -18,6 +18,7 @@ from app.models.perfil_legal import PerfilLegal
 from app.models.token_recuperacion import TokenRecuperacion
 from app.models.usuario import Usuario
 from app.schemas.usuario import UsuarioActualizar, UsuarioCrear
+from app.services import servicio_rnc
 from app.services.servicio_correo import enviar_correo
 from app.utils.seguridad import (
     crear_token_verificacion,
@@ -31,7 +32,7 @@ from app.utils.cifrado import cifrar_aes256
 
 # RF-30: protección contra fuerza bruta / 防暴力破解
 MAX_INTENTOS_FALLIDOS = 5
-MINUTOS_BLOQUEO = 10
+MINUTOS_BLOQUEO = 15
 
 
 def obtener_usuario_por_email(sesion: Session, email: str) -> Usuario | None:
@@ -67,10 +68,29 @@ def reiniciar_intentos(sesion: Session, usuario: Usuario) -> None:
     sesion.commit()
 
 
+def _validar_rnc_formal(rnc: str) -> None:
+    """RN-01: valida el RNC de un donante formal contra la API de la DGII.
+
+    Solo bloquea el registro si la DGII responde explícitamente que el RNC
+    es inválido/no existe. Errores de conectividad (503/504) no bloquean el
+    registro para no depender de la disponibilidad del servicio externo.
+    """
+    resultado = servicio_rnc.consultar_por_rnc(rnc)
+    if resultado.get("error") and resultado.get("codigo_http") in (400, 404):
+        raise ValueError(
+            "El RNC no es válido según la DGII: "
+            f"{resultado.get('mensaje', 'RNC no encontrado.')}"
+        )
+
+
 def registrar_usuario(
     sesion: Session, datos: UsuarioCrear, ip_origen: str | None = None
 ) -> Usuario:
     """Crea un usuario y registra su consentimiento / 创建用户并记录同意 (RF-01, RF-31)."""
+    # RN-01: el RNC de un donante formal debe ser válido ante la DGII.
+    if datos.rnc and datos.subtipo_donante == "formal":
+        _validar_rnc_formal(datos.rnc)
+
     usuario = Usuario(
         nombre=datos.nombre,
         apellido=datos.apellido,
