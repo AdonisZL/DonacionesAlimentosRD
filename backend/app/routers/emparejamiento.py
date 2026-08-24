@@ -19,6 +19,7 @@ from app.schemas.emparejamiento import (
     EmparejamientoCrear,
     EmparejamientoLeer,
     NotificacionLeer,
+    ResultadoCandidatos,
     RetroalimentacionCrear,
 )
 from app.services import servicio_emparejamiento
@@ -27,7 +28,7 @@ from app.utils.dependencias import obtener_usuario_actual, requerir_verificado
 enrutador = APIRouter(prefix="/api/emparejamientos", tags=["emparejamientos"])
 
 
-@enrutador.post("/candidatos", response_model=list[CandidatoEmparejamiento])
+@enrutador.post("/candidatos", response_model=ResultadoCandidatos)
 def buscar_candidatos(
     datos: BuscarCandidatos,
     sesion: Session = Depends(obtener_sesion),

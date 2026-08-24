@@ -53,6 +53,7 @@ class LoteInventario(Base):
     peso_disponible = Column(Numeric(10, 2))
     fecha_produccion = Column(Date)
     fecha_vencimiento = Column(Date, nullable=False)
+    codigo_lote_fabricante = Column(String(50))
     temperatura_requerida = Column(String(30))
     estado = Column(String(20), nullable=False, default="disponible")
     creado_en = Column(DateTime(timezone=True), server_default=func.now())

@@ -16,6 +16,8 @@ from app.schemas.inventario import (
     CategoriaAlimentoLeer,
     CategoriaPerecibilidadLeer,
     HistorialLeer,
+    InterpretacionLote,
+    InterpretarTextoEntrada,
     LoteCrear,
     LoteLeer,
     ProductoCrear,
@@ -74,6 +76,20 @@ def registrar_lote(
     except ValueError as error:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(error))
     return _enriquecer(sesion, lote)
+
+
+@enrutador.post(
+    "/lotes/interpretar",
+    response_model=InterpretacionLote,
+    status_code=status.HTTP_200_OK,
+)
+def interpretar_declaracion(
+    datos: InterpretarTextoEntrada,
+    sesion: Session = Depends(obtener_sesion),
+    usuario: Usuario = Depends(requerir_verificado),
+):
+    """Normaliza una declaración libre a campos de lote (RF-18) / 归一化自由文本."""
+    return servicio_inventario.interpretar_declaracion(sesion, usuario, datos.texto)
 
 
 @enrutador.get("/lotes", response_model=list[LoteLeer])

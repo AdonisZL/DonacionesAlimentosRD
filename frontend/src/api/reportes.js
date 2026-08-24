@@ -45,3 +45,22 @@ export async function obtenerReportes() {
   const { data } = await cliente.get("/api/reportes");
   return data;
 }
+
+// Certificado fiscal PDF de un lote (Ley 11-92) / 批次税务证明 PDF (RF-27)
+export async function descargarCertificadoPdf(idLote, rncDonante, valorTotalRd) {
+  const respuesta = await cliente.post(
+    `/api/reportes/lotes/${idLote}/certificado-pdf`,
+    { rnc_donante: rncDonante, valor_total_rd: valorTotalRd },
+    { responseType: "blob" },
+  );
+  return respuesta.data;
+}
+
+// Exportación DGII 606 del mes (.txt) / DGII 606 月度导出 (RF-16)
+export async function descargarDgii606(anio, mes) {
+  const respuesta = await cliente.get("/api/reportes/dgii-606", {
+    params: { anio, mes },
+    responseType: "blob",
+  });
+  return respuesta.data;
+}

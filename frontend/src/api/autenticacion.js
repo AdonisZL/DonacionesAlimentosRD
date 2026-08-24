@@ -34,6 +34,12 @@ export async function verificarCorreo(token) {
   return data;
 }
 
+// Reenviar enlace de verificación / 重新发送验证链接 (RF-06)
+export async function reenviarVerificacion() {
+  const { data } = await cliente.post("/api/auth/reenviar-verificacion");
+  return data;
+}
+
 // Solicitar recuperación / 请求找回密码 (RF-05)
 export async function solicitarRecuperacion(email) {
   const { data } = await cliente.post("/api/auth/recuperar-password", { email });

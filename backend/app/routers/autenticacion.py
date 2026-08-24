@@ -4,6 +4,9 @@ Registro, inicio de sesión (JWT) y datos del usuario actual.
 注册、登录（JWT）与当前用户信息。
 """
 
+import math
+from datetime import datetime, timezone
+
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
 
@@ -92,11 +95,18 @@ def login(
         raise credenciales_error
     # RF-30: cuenta bloqueada por intentos fallidos.
     if servicio_autenticacion.esta_bloqueado(usuario):
+        minutos_restantes = max(
+            1,
+            math.ceil(
+                (usuario.bloqueado_hasta - datetime.now(timezone.utc)).total_seconds()
+                / 60
+            ),
+        )
         raise HTTPException(
             status_code=status.HTTP_423_LOCKED,
             detail=(
                 "Cuenta bloqueada temporalmente por intentos fallidos. "
-                "Intenta de nuevo en unos minutos."
+                f"Intenta de nuevo en {minutos_restantes} minuto(s)."
             ),
         )
     if not usuario.contrasena_hash or not verificar_contrasena(
@@ -139,6 +149,20 @@ def verificar_correo(token: str, sesion: Session = Depends(obtener_sesion)) -> d
             detail="Enlace de verificación inválido o expirado.",
         )
     return {"mensaje": "Correo verificado correctamente."}
+
+
+@enrutador.post("/reenviar-verificacion")
+def reenviar_verificacion(
+    usuario: Usuario = Depends(obtener_usuario_actual),
+) -> dict:
+    """Reenvía el enlace de verificación de correo / 重新发送验证链接 (RF-06)."""
+    if usuario.email_verificado:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="El correo ya está verificado.",
+        )
+    servicio_autenticacion.enviar_verificacion_correo(usuario)
+    return {"mensaje": "Enlace de verificación reenviado."}
 
 
 @enrutador.post("/recuperar-password")

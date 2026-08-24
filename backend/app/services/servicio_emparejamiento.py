@@ -48,6 +48,14 @@ def _requiere_cadena_frio(sesion: Session, id_producto: int) -> bool:
     return bool(categoria and categoria.requiere_cadena_frio)
 
 
+def _lat_lng(coordenadas) -> tuple[float | None, float | None]:
+    """Extrae (lat, lng) de una columna geography PostGIS / 提取地理坐标 (lat, lng)."""
+    if coordenadas is None:
+        return None, None
+    punto = to_shape(coordenadas)
+    return punto.y, punto.x
+
+
 def _obtener_sede_origen(sesion: Session, lote: LoteInventario) -> DireccionSede | None:
     """Sede de origen del lote (propia o del dueño) / 批次来源场所."""
     if lote.id_sede:
@@ -65,7 +73,7 @@ def _obtener_sede_origen(sesion: Session, lote: LoteInventario) -> DireccionSede
 
 def buscar_candidatos(
     sesion: Session, usuario: Usuario, id_lote: uuid.UUID, radio_km: float
-) -> list[dict]:
+) -> dict:
     """Busca receptores compatibles dentro del radio (RF-17/18) / 搜索半径内的兼容接收方."""
     lote = sesion.get(LoteInventario, id_lote)
     if lote is None:
@@ -84,6 +92,7 @@ def buscar_candidatos(
     nombre_producto = producto.nombre_producto if producto else "Lote"
     requiere_frio = _requiere_cadena_frio(sesion, lote.id_producto)
     peso = float(lote.peso_total) if lote.peso_total is not None else None
+    lat_origen, lon_origen = _lat_lng(sede_origen.coordenadas)
 
     radio_m = radio_km * 1000
     distancia_km = (
@@ -130,36 +139,12 @@ def buscar_candidatos(
             capacidad_diaria_kg=cap,
         )
 
-        # RF-17 (actualizado): calcular tiempo estimado de llegada
-        # 计算预计到达时间（Google Maps Distance Matrix — simulado）
-        try:
-            if sede.coordenadas is not None:
-                lat_origen = (
-                    sede_origen.coordenadas.lat
-                    if hasattr(sede_origen.coordenadas, "lat")
-                    else None
-                )
-                lon_origen = (
-                    sede_origen.coordenadas.lon
-                    if hasattr(sede_origen.coordenadas, "lon")
-                    else None
-                )
-                lat_dest = (
-                    sede.coordenadas.lat if hasattr(sede.coordenadas, "lat") else None
-                )
-                lon_dest = (
-                    sede.coordenadas.lon if hasattr(sede.coordenadas, "lon") else None
-                )
-
-                if lat_origen and lat_dest:
-                    mapa = calcular_tiempo_viaje(
-                        lat_origen, lon_origen, lat_dest, lon_dest
-                    )
-                else:
-                    mapa = {"distancia_google_km": None, "tiempo_estimado_min": None}
-            else:
-                mapa = {"distancia_google_km": None, "tiempo_estimado_min": None}
-        except Exception:
+        # RF-17: tiempo estimado de llegada (Google Maps Distance Matrix — simulado)
+        # 预计到达时间（Google Maps Distance Matrix — 模拟）
+        lat_dest, lon_dest = _lat_lng(sede.coordenadas)
+        if lat_origen is not None and lat_dest is not None:
+            mapa = calcular_tiempo_viaje(lat_origen, lon_origen, lat_dest, lon_dest)
+        else:
             mapa = {"distancia_google_km": None, "tiempo_estimado_min": None}
 
         score_fefo = FEFOScoringEngine.calcular_score_final(
@@ -177,6 +162,8 @@ def buscar_candidatos(
                 "id_usuario": sede.id_usuario,
                 "nombre_sede": sede.nombre_sede,
                 "direccion_texto": sede.direccion_texto,
+                "latitud": lat_dest,
+                "longitud": lon_dest,
                 "distancia_km": dist_km,
                 "distancia_google_km": mapa.get("distancia_google_km"),
                 "tiempo_estimado_min": mapa.get("tiempo_estimado_min"),
@@ -190,7 +177,13 @@ def buscar_candidatos(
         )
     # OE3: priorizar primero por compatibilidad y luego por score FEFO (mayor a menor)
     candidatos.sort(key=lambda c: (not c["compatible"], -c["score_fefo"]))
-    return candidatos
+    return {
+        "origen_latitud": lat_origen,
+        "origen_longitud": lon_origen,
+        "radio_km": radio_km,
+        "candidatos": candidatos,
+    }
+
 
 
 def _dias_para_vencer(fecha_vencimiento) -> int:

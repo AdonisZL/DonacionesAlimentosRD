@@ -32,6 +32,12 @@ export async function registrarLote(datos) {
   return data;
 }
 
+// Interpretar declaración libre con IA (NER simulado) / 用 AI 归一化自由文本 (RF-18)
+export async function interpretarDeclaracion(texto) {
+  const { data } = await cliente.post("/api/inventario/lotes/interpretar", { texto });
+  return data;
+}
+
 // Listar lotes (orden FEFO) / 列出批次（FEFO 排序）(RF-12)
 export async function obtenerLotes() {
   const { data } = await cliente.get("/api/inventario/lotes");

@@ -16,6 +16,12 @@ import { obtenerLotes } from "../api/inventario.js";
 import { useSesion } from "../context/ContextoSesion.jsx";
 import EncabezadoApp from "../componentes/EncabezadoApp.jsx";
 import PieDePagina from "../componentes/PieDePagina.jsx";
+import MapaEmparejamiento from "../componentes/MapaEmparejamiento.jsx";
+
+// RN-10: radio geoespacial inicial 10 km, máximo 15 km (piloto Santo Domingo Oeste).
+const RADIO_MINIMO_KM = 1;
+const RADIO_MAXIMO_KM = 15;
+const RADIO_DEFECTO_KM = 10;
 
 const COLOR_ESTADO = {
   sugerido: "badge-estado sugerido",
@@ -31,8 +37,10 @@ function Emparejamientos() {
   const [lotes, setLotes] = useState([]);
   const [matches, setMatches] = useState([]);
   const [idLote, setIdLote] = useState("");
-  const [radio, setRadio] = useState(25);
+  const [radio, setRadio] = useState(RADIO_DEFECTO_KM);
   const [candidatos, setCandidatos] = useState([]);
+  const [origenBusqueda, setOrigenBusqueda] = useState(null);
+  const [sedeSeleccionada, setSedeSeleccionada] = useState(null);
   const [buscando, setBuscando] = useState(false);
 
   const [error, setError] = useState(null);
@@ -40,6 +48,10 @@ function Emparejamientos() {
 
   // Retroalimentación por match / 每个匹配的反馈
   const [retro, setRetro] = useState({});
+
+  // Evidencia fotográfica al completar (RN-14) / 完成时的证据照片
+  const [entregaEnCurso, setEntregaEnCurso] = useState(null);
+  const [urlEvidencia, setUrlEvidencia] = useState("");
 
   async function cargar() {
     setError(null);
@@ -66,6 +78,8 @@ function Emparejamientos() {
     setError(null);
     setMensaje(null);
     setCandidatos([]);
+    setOrigenBusqueda(null);
+    setSedeSeleccionada(null);
     if (!idLote) {
       setError("Selecciona un lote disponible.");
       return;
@@ -73,8 +87,11 @@ function Emparejamientos() {
     setBuscando(true);
     try {
       const res = await buscarCandidatos(idLote, Number(radio));
-      setCandidatos(res);
-      if (res.length === 0) {
+      setCandidatos(res.candidatos);
+      if (res.origen_latitud != null && res.origen_longitud != null) {
+        setOrigenBusqueda({ lat: res.origen_latitud, lng: res.origen_longitud });
+      }
+      if (res.candidatos.length === 0) {
         setMensaje("No se encontraron receptores dentro del radio indicado.");
       }
     } catch (err) {
@@ -91,6 +108,7 @@ function Emparejamientos() {
       await crearEmparejamiento(idLote, idSede, Number(radio));
       setMensaje("Emparejamiento sugerido creado.");
       setCandidatos([]);
+      setOrigenBusqueda(null);
       setIdLote("");
       await cargar();
     } catch (err) {
@@ -107,6 +125,32 @@ function Emparejamientos() {
       await cargar();
     } catch (err) {
       setError(err?.response?.data?.detail || "No se pudo completar la acción.");
+    }
+  }
+
+  function abrirModalEvidencia(idEmparejamiento) {
+    setError(null);
+    setMensaje(null);
+    setUrlEvidencia("");
+    setEntregaEnCurso(idEmparejamiento);
+  }
+
+  async function confirmarEvidenciaYCompletar(evento) {
+    evento.preventDefault();
+    if (!urlEvidencia.trim()) {
+      setError("La evidencia fotográfica es obligatoria para completar la entrega (RN-14).");
+      return;
+    }
+    setError(null);
+    setMensaje(null);
+    try {
+      await completarEmparejamiento(entregaEnCurso, urlEvidencia.trim());
+      setMensaje("Entrega registrada con evidencia fotográfica.");
+      setEntregaEnCurso(null);
+      setUrlEvidencia("");
+      await cargar();
+    } catch (err) {
+      setError(err?.response?.data?.detail || "No se pudo completar la entrega.");
     }
   }
 
@@ -188,13 +232,13 @@ function Emparejamientos() {
             </div>
             <div className="flex flex-col gap-xs">
               <label htmlFor="radio" className="font-label-sm text-label-sm text-on-surface-variant">
-                Radio (km, máx. 75)
+                Radio (km, 1–15, RN-10)
               </label>
               <input
                 id="radio"
                 type="number"
-                min={1}
-                max={75}
+                min={RADIO_MINIMO_KM}
+                max={RADIO_MAXIMO_KM}
                 value={radio}
                 onChange={(e) => setRadio(e.target.value)}
                 className="w-full rounded-lg border border-outline-variant bg-surface-container-lowest px-sm py-sm font-body-md text-body-md text-on-surface"
@@ -213,18 +257,41 @@ function Emparejamientos() {
             </button>
           </div>
 
+          {/* Mapa del radio geoespacial (RF-17/RN-10) */}
+          {origenBusqueda && (
+            <div className="mt-lg">
+              <MapaEmparejamiento
+                origen={origenBusqueda}
+                radioKm={Number(radio)}
+                candidatos={candidatos}
+                seleccionado={sedeSeleccionada}
+                onSeleccionar={setSedeSeleccionada}
+              />
+            </div>
+          )}
+
           {/* Candidatos */}
           {candidatos.length > 0 && (
             <ul className="mt-lg flex flex-col gap-sm animar-lista">
               {candidatos.map((c) => (
                 <li
                   key={c.id_sede}
-                  className="rounded-xl border border-outline-variant/40 p-md flex flex-col gap-xs hover:border-primary/20 hover:bg-primary/[0.02] transition-all"
+                  onMouseEnter={() => setSedeSeleccionada(c.id_sede)}
+                  className={`rounded-xl border p-md flex flex-col gap-xs transition-all ${
+                    sedeSeleccionada === c.id_sede
+                      ? "border-primary/40 bg-primary/[0.04]"
+                      : "border-outline-variant/40 hover:border-primary/20 hover:bg-primary/[0.02]"
+                  }`}
                 >
                   <div className="flex items-center justify-between gap-md">
                     <div>
                       <p className="font-label-md text-label-md text-on-surface font-semibold">
                         {c.nombre_sede || "Sede receptora"} · {c.distancia_km} km
+                        {c.tiempo_estimado_min != null && (
+                          <span className="text-on-surface-variant font-normal">
+                            {" "}· ≈ {Math.round(c.tiempo_estimado_min)} min (Google Maps)
+                          </span>
+                        )}
                       </p>
                       <p className="font-body-md text-sm text-on-surface-variant">
                         {c.direccion_texto || "Sin dirección"}
@@ -324,7 +391,7 @@ function Emparejamientos() {
                       <>
                         <button
                           type="button"
-                          onClick={() => accion(completarEmparejamiento, m.id_emparejamiento, "Entrega registrada.")}
+                          onClick={() => abrirModalEvidencia(m.id_emparejamiento)}
                           className="py-xs px-md rounded-lg bg-primary text-on-primary font-label-md text-label-md font-semibold hover:shadow-md hover:shadow-primary/20 transition-all flex items-center gap-xs"
                         >
                           <span className="material-symbols-outlined text-sm">local_shipping</span>
@@ -399,8 +466,63 @@ function Emparejamientos() {
           )}
         </section>
       </main>
+
+      {/* Modal de evidencia fotográfica obligatoria al completar (RN-14) */}
+      {entregaEnCurso && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-on-surface/40 backdrop-blur-sm px-margin-mobile">
+          <div className="w-full max-w-md bg-surface-container-lowest rounded-2xl border border-outline-variant/30 shadow-xl p-xl animar-escala">
+            <div className="flex items-center gap-sm mb-md">
+              <span className="material-symbols-outlined text-primary">photo_camera</span>
+              <h2 className="font-headline-md text-headline-md text-on-surface">
+                Evidencia de entrega
+              </h2>
+            </div>
+            <p className="font-body-md text-sm text-on-surface-variant mb-md">
+              La normativa (RN-14) exige cargar evidencia fotográfica de la recepción
+              física antes de marcar la donación como completada.
+            </p>
+            <form onSubmit={confirmarEvidenciaYCompletar} className="flex flex-col gap-md">
+              <div className="flex flex-col gap-xs">
+                <label htmlFor="evidencia" className="font-label-md text-label-md text-on-surface">
+                  URL de la foto de entrega
+                </label>
+                <input
+                  id="evidencia"
+                  type="url"
+                  required
+                  placeholder="https://…"
+                  value={urlEvidencia}
+                  onChange={(e) => setUrlEvidencia(e.target.value)}
+                  className="w-full rounded-lg border border-outline-variant bg-surface px-sm py-sm font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-shadow"
+                />
+                <small className="font-label-sm text-label-sm text-on-surface-variant">
+                  Sube la foto a un servicio de imágenes y pega aquí el enlace.
+                </small>
+              </div>
+              <div className="flex justify-end gap-sm pt-sm border-t border-outline-variant/30">
+                <button
+                  type="button"
+                  onClick={() => setEntregaEnCurso(null)}
+                  className="py-sm px-lg rounded-lg text-on-surface-variant hover:text-on-surface font-label-md text-label-md transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="py-sm px-lg rounded-lg bg-primary text-on-primary font-label-md text-label-md font-semibold hover:shadow-lg hover:shadow-primary/25 transition-all flex items-center gap-xs"
+                >
+                  <span className="material-symbols-outlined text-sm">check</span>
+                  Confirmar entrega
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       <PieDePagina />
     </div>
+
   );
 }
 

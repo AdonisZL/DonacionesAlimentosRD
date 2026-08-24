@@ -6,6 +6,7 @@ import { Navigate } from "react-router-dom";
 import {
   ajustarInventario,
   crearProducto,
+  interpretarDeclaracion,
   obtenerAlertas,
   obtenerCategoriasAlimentos,
   obtenerCategoriasPerecibilidad,
@@ -53,6 +54,7 @@ function Inventario() {
     unidad_medida: "kg",
     fecha_produccion: "",
     fecha_vencimiento: "",
+    codigo_lote_fabricante: "",
     temperatura_requerida: "",
     // Producto nuevo / 新产品
     nombre_producto: "",
@@ -60,6 +62,11 @@ function Inventario() {
     id_perecibilidad: "",
     marca: "",
   });
+
+  // Declaración por texto libre + IA (NER simulado, RF-18) / 自由文本声明 + AI
+  const [textoDeclaracion, setTextoDeclaracion] = useState("");
+  const [analizando, setAnalizando] = useState(false);
+  const [sugerenciaIA, setSugerenciaIA] = useState(null);
 
   // Panel de detalle / 详情面板
   const [loteSel, setLoteSel] = useState(null);
@@ -107,6 +114,53 @@ function Inventario() {
     setForm((anterior) => ({ ...anterior, [campo]: valor }));
   }
 
+  // RF-18: analiza el texto libre del donante (NER simulado) / 分析自由文本
+  async function analizarTexto() {
+    setError(null);
+    setMensaje(null);
+    if (textoDeclaracion.trim().length < 3) {
+      setError("Escribe una breve descripción de lo que vas a donar.");
+      return;
+    }
+    setAnalizando(true);
+    setSugerenciaIA(null);
+    try {
+      const resultado = await interpretarDeclaracion(textoDeclaracion.trim());
+      setSugerenciaIA(resultado);
+    } catch (err) {
+      setError(err?.response?.data?.detail || "No se pudo analizar el texto.");
+    } finally {
+      setAnalizando(false);
+    }
+  }
+
+  // Aplica la sugerencia de la IA al formulario, requiere confirmación humana.
+  function usarSugerenciaIA() {
+    if (!sugerenciaIA) return;
+    if (sugerenciaIA.id_producto_sugerido) {
+      setNuevoProducto(false);
+      cambiar("id_producto", String(sugerenciaIA.id_producto_sugerido));
+    } else if (sugerenciaIA.nombre_producto_detectado) {
+      setNuevoProducto(true);
+      cambiar("nombre_producto", sugerenciaIA.nombre_producto_detectado);
+    }
+    if (sugerenciaIA.cantidad_disponible_sugerida != null) {
+      cambiar("cantidad_disponible", String(sugerenciaIA.cantidad_disponible_sugerida));
+    }
+    if (sugerenciaIA.unidad_medida_sugerida) {
+      cambiar("unidad_medida", sugerenciaIA.unidad_medida_sugerida);
+    }
+    if (sugerenciaIA.fecha_vencimiento_sugerida) {
+      cambiar("fecha_vencimiento", sugerenciaIA.fecha_vencimiento_sugerida);
+    }
+    if (sugerenciaIA.requiere_cadena_frio_detectada) {
+      cambiar("temperatura_requerida", "refrigerado");
+    }
+    setMensaje("Datos aplicados al formulario. Revísalos antes de registrar el lote.");
+    setSugerenciaIA(null);
+    setTextoDeclaracion("");
+  }
+
   async function enviarLote(evento) {
     evento.preventDefault();
     setError(null);
@@ -149,6 +203,7 @@ function Inventario() {
         unidad_medida: form.unidad_medida || null,
         fecha_produccion: form.fecha_produccion || null,
         fecha_vencimiento: form.fecha_vencimiento,
+        codigo_lote_fabricante: form.codigo_lote_fabricante || null,
         temperatura_requerida: form.temperatura_requerida || null,
       });
       setMensaje("Lote registrado correctamente.");
@@ -158,6 +213,7 @@ function Inventario() {
         unidad_medida: "kg",
         fecha_produccion: "",
         fecha_vencimiento: "",
+        codigo_lote_fabricante: "",
         temperatura_requerida: "",
         nombre_producto: "",
         id_categoria_alimento: "",
@@ -254,6 +310,77 @@ function Inventario() {
           </section>
         )}
 
+        {/* Declaración por texto libre asistida por IA (RF-18, NER simulado) */}
+        <section className="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 p-xl shadow-sm hover-lift-sm">
+          <div className="flex items-center gap-sm mb-md">
+            <span className="material-symbols-outlined text-tertiary">psychology</span>
+            <h2 className="font-headline-md text-headline-md text-on-surface">
+              Declarar donación por texto
+            </h2>
+          </div>
+          <p className="font-body-md text-sm text-on-surface-variant mb-md">
+            Describe en tus palabras lo que vas a donar (ej. "Tengo 20 libras de
+            arroz que vencen en 25 días") y la IA propondrá los campos del
+            formulario. Tú decides si los usas: la confirmación humana es
+            obligatoria antes de registrar el lote.
+          </p>
+          <div className="flex flex-col gap-sm">
+            <textarea
+              rows={2}
+              value={textoDeclaracion}
+              onChange={(e) => setTextoDeclaracion(e.target.value)}
+              placeholder="Ej: Tengo 15 kg de habichuelas enlatadas, vencen el 2026-12-01"
+              className="w-full px-sm py-sm bg-surface border border-outline-variant rounded-lg font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all resize-y"
+            />
+            <div>
+              <button
+                type="button"
+                onClick={analizarTexto}
+                disabled={analizando}
+                className="py-sm px-lg rounded-lg bg-tertiary/10 text-tertiary font-label-md text-label-md font-semibold hover:bg-tertiary hover:text-on-tertiary transition-all disabled:opacity-60 flex items-center gap-xs"
+              >
+                <span className="material-symbols-outlined text-sm">
+                  {analizando ? "hourglass_empty" : "auto_awesome"}
+                </span>
+                {analizando ? "Analizando…" : "Analizar con IA"}
+              </button>
+            </div>
+
+            {sugerenciaIA && (
+              <div className="rounded-xl border border-tertiary/30 bg-tertiary/5 p-md flex flex-col gap-xs">
+                <p className="font-label-md text-label-md text-on-surface font-semibold flex items-center gap-xs">
+                  <span className="material-symbols-outlined text-tertiary text-sm">psychology</span>
+                  Sugerencia de la IA (confianza {Math.round(sugerenciaIA.confianza * 100)}%)
+                </p>
+                <p className="font-body-md text-sm text-on-surface-variant">{sugerenciaIA.justificacion_ia}</p>
+                <ul className="font-body-md text-sm text-on-surface grid grid-cols-2 gap-x-md gap-y-1">
+                  <li>Producto: {sugerenciaIA.nombre_producto_detectado || "no detectado"}</li>
+                  <li>Cantidad: {sugerenciaIA.cantidad_disponible_sugerida ?? "—"} {sugerenciaIA.unidad_medida_sugerida || ""}</li>
+                  <li>Vencimiento: {sugerenciaIA.fecha_vencimiento_sugerida || "no detectado"}</li>
+                  <li>Cadena de frío: {sugerenciaIA.requiere_cadena_frio_detectada ? "sí" : "no"}</li>
+                </ul>
+                <div className="flex justify-end gap-sm pt-xs">
+                  <button
+                    type="button"
+                    onClick={() => setSugerenciaIA(null)}
+                    className="py-xs px-md rounded-lg text-on-surface-variant hover:text-on-surface font-label-md text-label-md transition-colors"
+                  >
+                    Descartar
+                  </button>
+                  <button
+                    type="button"
+                    onClick={usarSugerenciaIA}
+                    className="py-xs px-md rounded-lg bg-tertiary text-on-tertiary font-label-md text-label-md font-semibold hover:shadow-md transition-all flex items-center gap-xs"
+                  >
+                    <span className="material-symbols-outlined text-sm">check</span>
+                    Usar estos datos
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </section>
+
         {/* Registrar lote (RF-09) */}
         <section className="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 p-xl shadow-sm hover-lift-sm">
           <div className="flex items-center gap-sm mb-md">
@@ -343,6 +470,9 @@ function Inventario() {
             </Campo>
             <Campo etiqueta="Fecha de vencimiento" id="fvenc">
               <Input tipo="date" value={form.fecha_vencimiento} onChange={(v) => cambiar("fecha_vencimiento", v)} min={hoyISO()} />
+            </Campo>
+            <Campo etiqueta="Código de lote del fabricante" id="codlote">
+              <Input value={form.codigo_lote_fabricante} onChange={(v) => cambiar("codigo_lote_fabricante", v)} />
             </Campo>
             <Campo etiqueta="Temperatura requerida (opcional)" id="temp">
               <Input value={form.temperatura_requerida} onChange={(v) => cambiar("temperatura_requerida", v)} />

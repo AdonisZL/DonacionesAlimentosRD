@@ -4,7 +4,7 @@
 import { useEffect, useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 
-import { obtenerRoles } from "../api/autenticacion.js";
+import { obtenerRoles, reenviarVerificacion } from "../api/autenticacion.js";
 import { useSesion } from "../context/ContextoSesion.jsx";
 import Marca from "./Marca.jsx";
 import CampanaNotificaciones from "./CampanaNotificaciones.jsx";
@@ -30,6 +30,8 @@ function EncabezadoApp() {
   const navegar = useNavigate();
   const [enlaces, setEnlaces] = useState(ENLACES);
   const [scrollY, setScrollY] = useState(0);
+  const [reenviando, setReenviando] = useState(false);
+  const [reenviado, setReenviado] = useState(false);
 
   useEffect(() => {
     if (!usuario) return;
@@ -62,6 +64,18 @@ function EncabezadoApp() {
   function salir() {
     cerrarSesion();
     navegar("/login");
+  }
+
+  async function reenviar() {
+    setReenviando(true);
+    try {
+      await reenviarVerificacion();
+      setReenviado(true);
+    } catch {
+      // silencioso / 静默失败
+    } finally {
+      setReenviando(false);
+    }
   }
 
   const tieneSombra = scrollY > 8;
@@ -124,6 +138,30 @@ function EncabezadoApp() {
           </button>
         </div>
       </div>
+
+      {/* Aviso de correo no verificado (RF-06) */}
+      {usuario && !usuario.email_verificado && (
+        <div className="bg-secondary/10 border-y border-secondary/20 px-margin-mobile md:px-margin-desktop py-xs">
+          <div className="max-w-6xl mx-auto flex flex-wrap items-center justify-between gap-sm">
+            <span className="font-body-md text-sm text-on-surface flex items-center gap-xs">
+              <span className="material-symbols-outlined text-secondary text-sm">mail</span>
+              Verifica tu correo para poder registrar lotes y emparejamientos.
+            </span>
+            {reenviado ? (
+              <span className="font-label-sm text-label-sm text-primary">Enlace reenviado ✓</span>
+            ) : (
+              <button
+                type="button"
+                onClick={reenviar}
+                disabled={reenviando}
+                className="font-label-sm text-label-sm text-secondary hover:underline disabled:opacity-60"
+              >
+                {reenviando ? "Enviando…" : "Reenviar verificación"}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Navegación móvil / 移动端导航 */}
       <nav className="md:hidden flex items-center gap-1 overflow-x-auto px-margin-mobile pb-sm">

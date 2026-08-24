@@ -3,7 +3,8 @@
 import { cliente } from "./cliente.js";
 
 // Buscar receptores compatibles / 搜索兼容接收方 (RF-17/18)
-export async function buscarCandidatos(idLote, radioKm = 25) {
+// RN-10: radio inicial 10 km, máximo 15 km (piloto Santo Domingo Oeste).
+export async function buscarCandidatos(idLote, radioKm = 10) {
   const { data } = await cliente.post("/api/emparejamientos/candidatos", {
     id_lote: idLote,
     radio_km: radioKm,
@@ -12,7 +13,7 @@ export async function buscarCandidatos(idLote, radioKm = 25) {
 }
 
 // Crear emparejamiento sugerido / 创建建议匹配
-export async function crearEmparejamiento(idLote, idSede, radioKm = 25) {
+export async function crearEmparejamiento(idLote, idSede, radioKm = 10) {
   const { data } = await cliente.post("/api/emparejamientos", {
     id_lote: idLote,
     id_sede: idSede,
@@ -39,9 +40,11 @@ export async function rechazarEmparejamiento(id) {
   return data;
 }
 
-// Completar (crea entrega) / 完成（创建交付）
-export async function completarEmparejamiento(id) {
-  const { data } = await cliente.post(`/api/emparejamientos/${id}/completar`);
+// Completar (crea entrega, exige evidencia) / 完成（创建交付，需要证据）(RN-14)
+export async function completarEmparejamiento(id, archivoEvidenciaUrl) {
+  const { data } = await cliente.post(`/api/emparejamientos/${id}/completar`, {
+    archivo_evidencia_url: archivoEvidenciaUrl,
+  });
   return data;
 }
 

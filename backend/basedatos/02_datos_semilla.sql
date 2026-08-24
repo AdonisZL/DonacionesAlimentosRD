@@ -24,7 +24,7 @@ SELECT *
 FROM (VALUES
         ('No perecedero', 30),
         ('Semi-perecedero', 15),
-        ('Perecedero', 1),
+        ('Perecedero', 5),
         ('Congelado', 30)
 ) AS v(nombre, dias)
 WHERE NOT EXISTS (SELECT 1

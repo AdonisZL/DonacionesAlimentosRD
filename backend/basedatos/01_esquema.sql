@@ -27,10 +27,25 @@ END;
 $$ LANGUAGE plpgsql;
 
 -- Función para bloquear modificación de reportes emitidos (RN-17)
+-- Permite únicamente la transición emitido -> rectificado (sin alterar el
+-- contenido fiscal ya emitido); cualquier otro cambio o un DELETE se bloquea.
 CREATE OR REPLACE FUNCTION fn_bloquear_reporte_emitido()
 RETURNS TRIGGER AS $$
 BEGIN
+  IF TG_OP = 'DELETE' THEN
+    IF OLD.estado = 'emitido' THEN
+      RAISE EXCEPTION 'RN-17: un reporte emitido no puede eliminarse.';
+    END IF;
+    RETURN OLD;
+  END IF;
+
   IF OLD.estado = 'emitido' THEN
+    IF NEW.estado = 'rectificado'
+       AND NEW.url_archivo IS NOT DISTINCT FROM OLD.url_archivo
+       AND NEW.parametros_busqueda IS NOT DISTINCT FROM OLD.parametros_busqueda
+       AND NEW.hash_documento IS NOT DISTINCT FROM OLD.hash_documento THEN
+      RETURN NEW;
+    END IF;
     RAISE EXCEPTION 'RN-17: un reporte emitido no puede modificarse directamente; genere un reporte rectificativo (id_reporte_rectificado).';
   END IF;
   RETURN NEW;
@@ -111,6 +126,7 @@ CREATE TABLE "lotes_inventario" (
   "peso_disponible" NUMERIC(10,2),
   "fecha_produccion" DATE,
   "fecha_vencimiento" DATE NOT NULL,
+  "codigo_lote_fabricante" VARCHAR(50),
   "temperatura_requerida" VARCHAR(30),
   "estado" VARCHAR(20) NOT NULL CHECK (estado IN ('disponible', 'reservado', 'asignado', 'entregado', 'vencido', 'retirado')) DEFAULT 'disponible',
   "creado_en" TIMESTAMPTZ NOT NULL DEFAULT (now()),
@@ -235,6 +251,7 @@ CREATE TABLE "reportes_consolidados" (
 -- Nota: Tabla append-only con trigger, estado='emitido' no se puede modificar
 --       hash_documento = SHA-256 del PDF generado (RF-27), calculado al emitir
 --       Hallazgo 8: integridad y no-repudio de reportes
+--       RN-15: conservar por un mínimo de 5 años (Ley 11-92, prescripción fiscal)
 -- 注意：仅追加表，estado='emitido' 无法修改，hash_documento 是 PDF 签名
 
 CREATE TABLE "notificaciones" (
@@ -260,6 +277,7 @@ CREATE TABLE "historial_estado_lote" (
 -- Nota: Tabla append-only, con trigger que bloquea UPDATE/DELETE
 --       hash_actual = SHA-256(id_usuario||id_lote||estado_nuevo||hash_anterior)
 --       Hallazgo 8: cadena de hashes para integridad del historial
+--       RN-15: conservar por un mínimo de 5 años (Ley 11-92)
 -- 注意：仅追加表，触发器阻止 UPDATE/DELETE，带有哈希链
 
 CREATE TABLE "bitacora_auditoria" (
@@ -370,7 +388,7 @@ EXECUTE FUNCTION fn_bloquear_modificacion_append_only();
 
 -- Trigger: Bloquea modificación de reportes que ya fueron emitidos (RN-17)
 CREATE TRIGGER trg_reporte_inmutable
-BEFORE UPDATE ON reportes_consolidados
+BEFORE DELETE OR UPDATE ON reportes_consolidados
 FOR EACH ROW
 EXECUTE FUNCTION fn_bloquear_reporte_emitido();
 
@@ -405,5 +423,4 @@ ALTER TABLE "solicitudes_arco" ADD FOREIGN KEY ("id_usuario") REFERENCES "usuari
 ALTER TABLE "solicitudes_arco" ADD FOREIGN KEY ("atendido_por") REFERENCES "usuarios" ("id_usuario") DEFERRABLE INITIALLY IMMEDIATE;
 ALTER TABLE "retroalimentacion" ADD FOREIGN KEY ("id_entrega") REFERENCES "entregas_transacciones" ("id_entrega") DEFERRABLE INITIALLY IMMEDIATE;
 ALTER TABLE "retroalimentacion" ADD FOREIGN KEY ("id_usuario") REFERENCES "usuarios" ("id_usuario") DEFERRABLE INITIALLY IMMEDIATE;
-ALTER TABLE "tokens_recuperacion_password" ADD FOREIGN KEY ("id_usuario") REFERENCES "usuarios" ("id_usuario") DEFERRABLE INITIALLY IMMEDIATE;
 ALTER TABLE "tokens_recuperacion_password" ADD FOREIGN KEY ("id_usuario") REFERENCES "usuarios" ("id_usuario") DEFERRABLE INITIALLY IMMEDIATE;

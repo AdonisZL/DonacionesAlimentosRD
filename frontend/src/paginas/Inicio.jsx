@@ -53,7 +53,7 @@ const PASOS = [
 const ESTADISTICAS = [
   { valor: "30%", etiqueta: "Alimentos que se desperdician en RD" },
   { valor: "FEFO", etiqueta: "Optimización de vencimientos" },
-  { valor: "≤ 75 km", etiqueta: "Radio de emparejamiento" },
+  { valor: "≤ 15 km", etiqueta: "Radio de emparejamiento (piloto SDO)" },
 ];
 
 function AccionRapida({ a, icono, titulo, texto, color }) {

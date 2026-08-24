@@ -6,7 +6,7 @@ FEFO 逻辑：批次登记、临期窗口、预警、调整与不可变日志。
 """
 
 import uuid
-from datetime import date
+from datetime import date, datetime, timedelta
 
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -14,13 +14,14 @@ from sqlalchemy.orm import Session
 from app.models.categoria_alimento import CategoriaAlimento
 from app.models.categoria_perecibilidad import CategoriaPerecibilidad
 from app.models.historial_estado_lote import HistorialEstadoLote
+from app.models.ia_ejecucion import IaEjecucion
 from app.models.lote_inventario import LoteInventario
 from app.models.merma import Merma
 from app.models.producto import Producto
 from app.models.rol import Rol
 from app.models.usuario import Usuario
 from app.schemas.inventario import AjusteInventario, LoteCrear, ProductoCrear
-from app.services import servicio_auditoria
+from app.services import servicio_auditoria, servicio_ia
 
 # RF-13: umbral de alerta de vencimiento (días) / 临期预警阈值（天）
 DIAS_ALERTA_VENCIMIENTO = 3
@@ -95,6 +96,80 @@ def crear_producto(sesion: Session, datos: ProductoCrear) -> Producto:
     return producto
 
 
+def _resolver_fecha_sugerida(marcador: str | None) -> date | None:
+    """Convierte la fecha detectada por la IA a un `date` real / 转换 AI 检测的日期."""
+    if not marcador:
+        return None
+    if marcador.startswith("+") and marcador.endswith("d"):
+        try:
+            dias = int(marcador[1:-1])
+        except ValueError:
+            return None
+        return date.today() + timedelta(days=dias)
+    try:
+        return datetime.strptime(marcador, "%Y-%m-%d").date()
+    except ValueError:
+        return None
+
+
+def interpretar_declaracion(sesion: Session, usuario: Usuario, texto: str) -> dict:
+    """Normaliza una declaración libre de donación a campos de lote (RF-18).
+
+    Simula el paso de normalización semántica (NER) que en producción haría
+    Gemini: propone producto/cantidad/unidad/vencimiento a partir de texto no
+    estructurado. El resultado es solo una sugerencia; el donante debe
+    revisar y confirmar los datos antes de registrar el lote (validación
+    humana obligatoria, igual que en el emparejamiento).
+    模拟 NER 归一化步骤，仅生成建议，最终需人工确认后才登记批次。
+    """
+    catalogo = [
+        {"id_producto": p.id_producto, "nombre_producto": p.nombre_producto}
+        for p in listar_productos(sesion)
+    ]
+    resultado = servicio_ia.interpretar_texto_libre(texto, catalogo)
+    entidades = resultado["entidades"]
+
+    id_producto = entidades["id_producto"]
+    nombre_perecibilidad = None
+    if id_producto is not None:
+        producto = sesion.get(Producto, id_producto)
+        if producto is not None:
+            perecibilidad = sesion.get(
+                CategoriaPerecibilidad, producto.id_perecibilidad
+            )
+            nombre_perecibilidad = perecibilidad.nombre if perecibilidad else None
+
+    fecha_sugerida = _resolver_fecha_sugerida(entidades["fecha_vencimiento_sugerida"])
+
+    # RF-18: se registra la ejecución para auditoría de la capa NLP (sin
+    # id_emparejamiento porque ocurre antes de cualquier emparejamiento).
+    sesion.add(
+        IaEjecucion(
+            id_emparejamiento=None,
+            tipo_ejecucion="normalizacion_ner",
+            prompt=resultado["prompt"],
+            respuesta=resultado["respuesta"],
+            modelo=resultado["modelo"],
+            tokens_usados=resultado["tokens_usados"],
+            confianza=resultado["confianza"],
+        )
+    )
+    sesion.commit()
+
+    return {
+        "texto_original": texto,
+        "id_producto_sugerido": id_producto,
+        "nombre_producto_detectado": entidades["nombre_producto_detectado"],
+        "nombre_perecibilidad_detectada": nombre_perecibilidad,
+        "cantidad_disponible_sugerida": entidades["cantidad"],
+        "unidad_medida_sugerida": entidades["unidad_medida"],
+        "fecha_vencimiento_sugerida": fecha_sugerida,
+        "requiere_cadena_frio_detectada": entidades["requiere_cadena_frio"],
+        "confianza": resultado["confianza"],
+        "justificacion_ia": resultado["respuesta"],
+    }
+
+
 # --- Lotes / 批次 ----------------------------------------------------------
 
 
@@ -132,6 +207,7 @@ def registrar_lote(
         peso_disponible=datos.peso_total,
         fecha_produccion=datos.fecha_produccion,
         fecha_vencimiento=datos.fecha_vencimiento,
+        codigo_lote_fabricante=datos.codigo_lote_fabricante,
         temperatura_requerida=datos.temperatura_requerida,
         estado="disponible",
     )
@@ -174,6 +250,7 @@ def _enriquecer_lote(sesion: Session, lote: LoteInventario) -> dict:
         "peso_total": float(lote.peso_total) if lote.peso_total is not None else None,
         "fecha_produccion": lote.fecha_produccion,
         "fecha_vencimiento": lote.fecha_vencimiento,
+        "codigo_lote_fabricante": lote.codigo_lote_fabricante,
         "temperatura_requerida": lote.temperatura_requerida,
         "estado": lote.estado,
         "creado_en": lote.creado_en,

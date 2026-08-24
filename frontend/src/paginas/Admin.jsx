@@ -9,6 +9,7 @@ import {
   obtenerPanelAdmin,
   obtenerUsuariosAdmin,
 } from "../api/admin.js";
+import { obtenerTodasSolicitudes, resolverSolicitud } from "../api/arco.js";
 import { obtenerRoles } from "../api/autenticacion.js";
 import { useSesion } from "../context/ContextoSesion.jsx";
 import EncabezadoApp from "../componentes/EncabezadoApp.jsx";
@@ -23,6 +24,9 @@ function Admin() {
   const [panel, setPanel] = useState(null);
   const [usuarios, setUsuarios] = useState([]);
   const [auditoria, setAuditoria] = useState([]);
+  const [solicitudesArco, setSolicitudesArco] = useState([]);
+  const [solicitudEnCurso, setSolicitudEnCurso] = useState(null);
+  const [respuestaArco, setRespuestaArco] = useState({ estado: "resuelta", respuesta: "" });
   const [error, setError] = useState(null);
   const [mensaje, setMensaje] = useState(null);
 
@@ -44,14 +48,16 @@ function Admin() {
   async function cargar() {
     setError(null);
     try {
-      const [p, u, a] = await Promise.all([
+      const [p, u, a, s] = await Promise.all([
         obtenerPanelAdmin(),
         obtenerUsuariosAdmin(),
         obtenerAuditoria(),
+        obtenerTodasSolicitudes(),
       ]);
       setPanel(p);
       setUsuarios(u);
       setAuditoria(a);
+      setSolicitudesArco(s);
     } catch {
       setError("No se pudieron cargar los datos de administración.");
     }
@@ -66,6 +72,31 @@ function Admin() {
       await cargar();
     } catch (err) {
       setError(err?.response?.data?.detail || "No se pudo cambiar el estado.");
+    }
+  }
+
+  function abrirResolucionArco(solicitud) {
+    setError(null);
+    setMensaje(null);
+    setRespuestaArco({ estado: "resuelta", respuesta: "" });
+    setSolicitudEnCurso(solicitud);
+  }
+
+  async function enviarResolucionArco(evento) {
+    evento.preventDefault();
+    if (!respuestaArco.respuesta.trim()) {
+      setError("Escribe la respuesta para el solicitante.");
+      return;
+    }
+    setError(null);
+    setMensaje(null);
+    try {
+      await resolverSolicitud(solicitudEnCurso.id_solicitud, respuestaArco);
+      setMensaje("Solicitud ARCO resuelta.");
+      setSolicitudEnCurso(null);
+      await cargar();
+    } catch (err) {
+      setError(err?.response?.data?.detail || "No se pudo resolver la solicitud.");
     }
   }
 
@@ -187,6 +218,7 @@ function Admin() {
         </section>
 
         {/* Auditoría (RF-29) */}
+        {/* Auditoría (RF-29) */}
         <section className="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 p-xl">
           <h2 className="font-headline-md text-headline-md text-on-surface mb-md">
             Bitácora de auditoría
@@ -214,7 +246,144 @@ function Admin() {
             </table>
           </div>
         </section>
+
+        {/* Solicitudes ARCO (RN-19, Ley 172-13) */}
+        <section className="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 p-xl">
+          <h2 className="font-headline-md text-headline-md text-on-surface mb-md flex items-center gap-sm">
+            <span className="material-symbols-outlined text-primary">shield_person</span>
+            Solicitudes ARCO
+          </h2>
+          {solicitudesArco.length === 0 ? (
+            <p className="font-body-md text-on-surface-variant">No hay solicitudes registradas.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-left border-collapse">
+                <thead>
+                  <tr className="border-b border-outline-variant/40 text-on-surface-variant font-label-sm text-label-sm">
+                    <th className="py-sm pr-md">Fecha</th>
+                    <th className="py-sm pr-md">Tipo</th>
+                    <th className="py-sm pr-md">Descripción</th>
+                    <th className="py-sm pr-md">Límite (15 días hábiles)</th>
+                    <th className="py-sm pr-md">Estado</th>
+                    <th className="py-sm pr-md">Acción</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {solicitudesArco.map((s) => (
+                    <tr key={s.id_solicitud} className="border-b border-outline-variant/20 font-body-md text-body-md text-on-surface align-top">
+                      <td className="py-sm pr-md">{new Date(s.fecha_solicitud).toLocaleDateString()}</td>
+                      <td className="py-sm pr-md capitalize">{s.tipo_solicitud}</td>
+                      <td className="py-sm pr-md max-w-xs truncate" title={s.descripcion || ""}>
+                        {s.descripcion || "—"}
+                      </td>
+                      <td className="py-sm pr-md">{s.fecha_limite_respuesta}</td>
+                      <td className="py-sm pr-md">
+                        <span className={`inline-block rounded-full px-sm py-[2px] font-label-sm text-label-sm capitalize ${
+                          s.estado === "resuelta"
+                            ? "bg-primary-container/30 text-on-primary-container"
+                            : s.estado === "rechazada" || s.estado === "vencida"
+                              ? "bg-error/15 text-error"
+                              : "bg-secondary-container/30 text-on-secondary-container"
+                        }`}>
+                          {s.estado}
+                        </span>
+                      </td>
+                      <td className="py-sm pr-md">
+                        {["recibida", "en_proceso"].includes(s.estado) ? (
+                          <button
+                            type="button"
+                            onClick={() => abrirResolucionArco(s)}
+                            className="text-tertiary font-label-md text-label-md hover:underline"
+                          >
+                            Resolver
+                          </button>
+                        ) : (
+                          <span className="text-on-surface-variant font-label-sm text-label-sm">
+                            {s.respuesta ? "Respondida" : "—"}
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
       </main>
+
+      {/* Modal de resolución de solicitud ARCO */}
+      {solicitudEnCurso && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-on-surface/40 backdrop-blur-sm px-margin-mobile">
+          <div className="w-full max-w-md bg-surface-container-lowest rounded-2xl border border-outline-variant/30 shadow-xl p-xl animar-escala">
+            <div className="flex items-center gap-sm mb-md">
+              <span className="material-symbols-outlined text-primary">shield_person</span>
+              <h2 className="font-headline-md text-headline-md text-on-surface">
+                Resolver solicitud ARCO
+              </h2>
+            </div>
+            <p className="font-body-md text-sm text-on-surface-variant mb-md capitalize">
+              Tipo: {solicitudEnCurso.tipo_solicitud} — {solicitudEnCurso.descripcion || "sin detalle"}
+            </p>
+            <form onSubmit={enviarResolucionArco} className="flex flex-col gap-md">
+              <div className="flex flex-col gap-xs">
+                <span className="font-label-md text-label-md text-on-surface">Resultado</span>
+                <div className="flex gap-sm">
+                  {["resuelta", "rechazada"].map((op) => (
+                    <label
+                      key={op}
+                      className={`flex-1 text-center py-sm rounded-lg border-2 cursor-pointer capitalize font-label-md text-label-md transition-all ${
+                        respuestaArco.estado === op
+                          ? "border-primary bg-primary/5 text-primary font-semibold"
+                          : "border-outline-variant/40 text-on-surface-variant"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="estado_arco"
+                        value={op}
+                        checked={respuestaArco.estado === op}
+                        onChange={() => setRespuestaArco((r) => ({ ...r, estado: op }))}
+                        className="sr-only"
+                      />
+                      {op}
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <div className="flex flex-col gap-xs">
+                <label htmlFor="respuesta_arco" className="font-label-md text-label-md text-on-surface">
+                  Respuesta para el solicitante
+                </label>
+                <textarea
+                  id="respuesta_arco"
+                  rows={3}
+                  value={respuestaArco.respuesta}
+                  onChange={(e) => setRespuestaArco((r) => ({ ...r, respuesta: e.target.value }))}
+                  className="w-full px-sm py-sm bg-surface border border-outline-variant rounded-lg font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-all resize-y"
+                />
+              </div>
+              <div className="flex justify-end gap-sm pt-sm border-t border-outline-variant/30">
+                <button
+                  type="button"
+                  onClick={() => setSolicitudEnCurso(null)}
+                  className="py-sm px-lg rounded-lg text-on-surface-variant hover:text-on-surface font-label-md text-label-md transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  className="py-sm px-lg rounded-lg bg-primary text-on-primary font-label-md text-label-md font-semibold hover:shadow-lg hover:shadow-primary/25 transition-all flex items-center gap-xs"
+                >
+                  <span className="material-symbols-outlined text-sm">check</span>
+                  Enviar resolución
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       <PieDePagina />
     </div>
   );

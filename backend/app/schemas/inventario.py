@@ -67,6 +67,7 @@ class LoteCrear(BaseModel):
     peso_total: float | None = Field(default=None, ge=0)
     fecha_produccion: date | None = None
     fecha_vencimiento: date
+    codigo_lote_fabricante: str | None = Field(default=None, max_length=50)
     temperatura_requerida: str | None = Field(default=None, max_length=30)
 
     @field_validator("fecha_vencimiento")
@@ -94,9 +95,31 @@ class LoteLeer(BaseModel):
     peso_total: float | None = None
     fecha_produccion: date | None = None
     fecha_vencimiento: date
+    codigo_lote_fabricante: str | None = None
     temperatura_requerida: str | None = None
     estado: str
     creado_en: datetime | None = None
+
+
+class InterpretarTextoEntrada(BaseModel):
+    """Texto libre del donante a normalizar / 待归一化的自由文本 (RF-18)."""
+
+    texto: str = Field(min_length=3, max_length=500)
+
+
+class InterpretacionLote(BaseModel):
+    """Sugerencia de campos de lote extraída del texto / 从文本中提取的批次建议."""
+
+    texto_original: str
+    id_producto_sugerido: int | None = None
+    nombre_producto_detectado: str | None = None
+    nombre_perecibilidad_detectada: str | None = None
+    cantidad_disponible_sugerida: float | None = None
+    unidad_medida_sugerida: str | None = None
+    fecha_vencimiento_sugerida: date | None = None
+    requiere_cadena_frio_detectada: bool = False
+    confianza: float
+    justificacion_ia: str
 
     # Campos calculados (no persistidos) / 计算字段（非持久化）
     nombre_producto: str | None = None

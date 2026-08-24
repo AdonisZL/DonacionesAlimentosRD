@@ -31,7 +31,20 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION fn_bloquear_reporte_emitido()
 RETURNS TRIGGER AS $$
 BEGIN
+  IF TG_OP = 'DELETE' THEN
+    IF OLD.estado = 'emitido' THEN
+      RAISE EXCEPTION 'RN-17: un reporte emitido no puede eliminarse.';
+    END IF;
+    RETURN OLD;
+  END IF;
+
   IF OLD.estado = 'emitido' THEN
+    IF NEW.estado = 'rectificado'
+       AND NEW.url_archivo IS NOT DISTINCT FROM OLD.url_archivo
+       AND NEW.parametros_busqueda IS NOT DISTINCT FROM OLD.parametros_busqueda
+       AND NEW.hash_documento IS NOT DISTINCT FROM OLD.hash_documento THEN
+      RETURN NEW;
+    END IF;
     RAISE EXCEPTION 'RN-17: un reporte emitido no puede modificarse directamente; genere un reporte rectificativo (id_reporte_rectificado).';
   END IF;
   RETURN NEW;
@@ -118,10 +131,11 @@ BEFORE DELETE OR UPDATE ON "historial_estado_lote"
 FOR EACH ROW
 EXECUTE FUNCTION fn_bloquear_modificacion_append_only();
 
--- Trigger para reportes_consolidados (RN-17: No modificar si está emitido)
+-- Trigger para reportes_consolidados (RN-17: No modificar/eliminar si está emitido,
+-- salvo la transición emitido -> rectificado)
 DROP TRIGGER IF EXISTS "trg_reporte_inmutable" ON "reportes_consolidados";
 CREATE TRIGGER "trg_reporte_inmutable"
-BEFORE UPDATE ON "reportes_consolidados"
+BEFORE DELETE OR UPDATE ON "reportes_consolidados"
 FOR EACH ROW
 EXECUTE FUNCTION fn_bloquear_reporte_emitido();
 
@@ -156,6 +170,21 @@ WHERE constraint_name LIKE '%aprobado_por%';
 ALTER TABLE "emparejamientos" DROP CONSTRAINT IF EXISTS "chk_radio_maximo";
 ALTER TABLE "emparejamientos"
 ADD CONSTRAINT "chk_radio_maximo" CHECK (distancia_km <= 15);
+
+-- =====================================================================
+-- 9. RN-05: VENTANA MÍNIMA "PERECEDERO" CORREGIDA A 5 DÍAS
+-- =====================================================================
+
+UPDATE "categorias_perecibilidad"
+SET "dias_minimos_ventana" = 5
+WHERE "nombre" = 'Perecedero' AND "dias_minimos_ventana" <> 5;
+
+-- =====================================================================
+-- 10. RF-09: CÓDIGO DE LOTE DEL FABRICANTE
+-- =====================================================================
+
+ALTER TABLE "lotes_inventario"
+ADD COLUMN IF NOT EXISTS "codigo_lote_fabricante" VARCHAR(50);
 
 -- =====================================================================
 -- COMMIT TRANSACTION

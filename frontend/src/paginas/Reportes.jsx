@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { Navigate } from "react-router-dom";
 
 import {
+  descargarCertificadoPdf,
+  descargarDgii606,
   exportarSheets,
   generarReporteFiscal,
   obtenerReporteAsignaciones,
@@ -14,6 +16,18 @@ import { obtenerRoles } from "../api/autenticacion.js";
 import { useSesion } from "../context/ContextoSesion.jsx";
 import EncabezadoApp from "../componentes/EncabezadoApp.jsx";
 import PieDePagina from "../componentes/PieDePagina.jsx";
+
+// Dispara la descarga de un blob en el navegador / 在浏览器中下载 Blob
+function descargarBlob(blob, nombreArchivo) {
+  const url = window.URL.createObjectURL(blob);
+  const enlace = document.createElement("a");
+  enlace.href = url;
+  enlace.download = nombreArchivo;
+  document.body.appendChild(enlace);
+  enlace.click();
+  enlace.remove();
+  window.URL.revokeObjectURL(url);
+}
 
 const PESTANAS = [
   { id: "donaciones", texto: "Donaciones", icono: "inventory" },
@@ -44,8 +58,13 @@ function Reportes() {
     mes: HOY.getMonth() + 1,
   });
   const [resultadoFiscal, setResultadoFiscal] = useState(null);
+  const [descargandoDgii606, setDescargandoDgii606] = useState(false);
   // Exportación
   const [exportacion, setExportacion] = useState(null);
+  // Certificado fiscal PDF por lote (RF-27)
+  const [certificadoLote, setCertificadoLote] = useState(null);
+  const [certificadoForm, setCertificadoForm] = useState({ rnc_donante: "", valor_total_rd: "" });
+  const [generandoCertificado, setGenerandoCertificado] = useState(false);
 
   useEffect(() => {
     if (!usuario) return;
@@ -129,6 +148,55 @@ function Reportes() {
       setMensaje("Reporte fiscal generado (inmutable).");
     } catch (err) {
       setError(err?.response?.data?.detail || "No se pudo generar el reporte fiscal.");
+    }
+  }
+
+  // RF-16/RF-27: exporta el anexo fiscal DGII 606 del mes seleccionado.
+  async function exportarDgii606() {
+    setError(null);
+    setMensaje(null);
+    setDescargandoDgii606(true);
+    try {
+      const blob = await descargarDgii606(Number(fiscal.anio), Number(fiscal.mes));
+      descargarBlob(blob, `DONACIONES_${fiscal.anio}_${String(fiscal.mes).padStart(2, "0")}.txt`);
+      setMensaje("Archivo DGII 606 descargado.");
+    } catch (err) {
+      setError(err?.response?.data?.detail || "No se pudo exportar el DGII 606.");
+    } finally {
+      setDescargandoDgii606(false);
+    }
+  }
+
+  function abrirModalCertificado(idLote) {
+    setError(null);
+    setMensaje(null);
+    setCertificadoForm({ rnc_donante: "", valor_total_rd: "" });
+    setCertificadoLote(idLote);
+  }
+
+  // RF-27: certificación fiscal PDF inmutable de un lote (Ley 11-92, Art. 287).
+  async function generarCertificado(evento) {
+    evento.preventDefault();
+    if (!certificadoForm.rnc_donante || !certificadoForm.valor_total_rd) {
+      setError("Indica el RNC del donante y el valor total en RD$.");
+      return;
+    }
+    setError(null);
+    setMensaje(null);
+    setGenerandoCertificado(true);
+    try {
+      const blob = await descargarCertificadoPdf(
+        certificadoLote,
+        certificadoForm.rnc_donante,
+        Number(certificadoForm.valor_total_rd),
+      );
+      descargarBlob(blob, `certificado_${certificadoLote}.pdf`);
+      setMensaje("Certificado fiscal PDF descargado.");
+      setCertificadoLote(null);
+    } catch (err) {
+      setError(err?.response?.data?.detail || "No se pudo generar el certificado.");
+    } finally {
+      setGenerandoCertificado(false);
     }
   }
 
@@ -224,7 +292,7 @@ function Reportes() {
                   </button>
                 </div>
                 <Tabla
-                  columnas={["Fecha", "Donante", "Producto", "Categoría", "Cantidad", "Estado"]}
+                  columnas={["Fecha", "Donante", "Producto", "Categoría", "Cantidad", "Estado", "Certificado"]}
                   filas={donaciones.filas.map((f) => [
                     f.fecha ? new Date(f.fecha).toLocaleDateString() : "—",
                     f.donante,
@@ -232,6 +300,15 @@ function Reportes() {
                     f.categoria,
                     `${f.cantidad} ${f.unidad || ""}`,
                     f.estado,
+                    <button
+                      key="cert"
+                      type="button"
+                      onClick={() => abrirModalCertificado(f.id_lote)}
+                      className="inline-flex items-center gap-xs text-tertiary font-label-sm text-label-sm hover:underline"
+                    >
+                      <span className="material-symbols-outlined text-sm">picture_as_pdf</span>
+                      PDF
+                    </button>,
                   ])}
                 />
               </>
@@ -314,6 +391,17 @@ function Reportes() {
                     Generar reporte fiscal
                   </button>
                 </form>
+                <div>
+                  <button
+                    type="button"
+                    onClick={exportarDgii606}
+                    disabled={descargandoDgii606}
+                    className="inline-flex items-center gap-xs py-sm px-md rounded-lg border border-tertiary text-tertiary font-label-md text-label-md hover:bg-surface-container-low transition-colors disabled:opacity-60"
+                  >
+                    <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>description</span>
+                    {descargandoDgii606 ? "Exportando…" : "Exportar anexo DGII 606 (.txt)"}
+                  </button>
+                </div>
 
                 {resultadoFiscal && (
                   <div className="rounded-xl border border-outline-variant/40 bg-surface-container-low p-lg flex flex-col gap-xs">
@@ -361,6 +449,55 @@ function Reportes() {
           </section>
         )}
       </main>
+
+      {/* Modal de certificado fiscal PDF por lote (RF-27, Ley 11-92 Art. 287) */}
+      {certificadoLote && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-on-surface/40 backdrop-blur-sm px-margin-mobile">
+          <div className="w-full max-w-md bg-surface-container-lowest rounded-2xl border border-outline-variant/30 shadow-xl p-xl animar-escala">
+            <div className="flex items-center gap-sm mb-md">
+              <span className="material-symbols-outlined text-primary">picture_as_pdf</span>
+              <h2 className="font-headline-md text-headline-md text-on-surface">
+                Certificado fiscal del lote
+              </h2>
+            </div>
+            <p className="font-body-md text-sm text-on-surface-variant mb-md">
+              Genera la certificación de donación en PDF (Art. 287 del Código
+              Tributario) con el RNC del donante y el valor comercial en RD$.
+            </p>
+            <form onSubmit={generarCertificado} className="flex flex-col gap-md">
+              <Campo
+                etiqueta="RNC del donante"
+                valor={certificadoForm.rnc_donante}
+                onChange={(v) => setCertificadoForm((f) => ({ ...f, rnc_donante: v }))}
+              />
+              <Campo
+                etiqueta="Valor total (RD$)"
+                tipo="number"
+                valor={certificadoForm.valor_total_rd}
+                onChange={(v) => setCertificadoForm((f) => ({ ...f, valor_total_rd: v }))}
+              />
+              <div className="flex justify-end gap-sm pt-sm border-t border-outline-variant/30">
+                <button
+                  type="button"
+                  onClick={() => setCertificadoLote(null)}
+                  className="py-sm px-lg rounded-lg text-on-surface-variant hover:text-on-surface font-label-md text-label-md transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={generandoCertificado}
+                  className="py-sm px-lg rounded-lg bg-primary text-on-primary font-label-md text-label-md font-semibold hover:shadow-lg hover:shadow-primary/25 transition-all disabled:opacity-60 flex items-center gap-xs"
+                >
+                  <span className="material-symbols-outlined text-sm">download</span>
+                  {generandoCertificado ? "Generando…" : "Descargar PDF"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       <PieDePagina />
     </div>
   );

@@ -17,6 +17,8 @@ class CandidatoEmparejamiento(BaseModel):
     id_usuario: uuid.UUID
     nombre_sede: str | None = None
     direccion_texto: str | None = None
+    latitud: float | None = None
+    longitud: float | None = None
     distancia_km: float
     distancia_google_km: float | None = None
     tiempo_estimado_min: float | None = None
@@ -26,6 +28,15 @@ class CandidatoEmparejamiento(BaseModel):
     motivo_incompatible: str | None = None
     justificacion_ia: str | None = None
     score_fefo: float | None = None
+
+
+class ResultadoCandidatos(BaseModel):
+    """Resultado de la búsqueda, con el origen para dibujar el mapa (RF-17) / 搜索结果及地图原点."""
+
+    origen_latitud: float | None = None
+    origen_longitud: float | None = None
+    radio_km: float
+    candidatos: list[CandidatoEmparejamiento]
 
 
 class BuscarCandidatos(BaseModel):
